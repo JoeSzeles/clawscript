@@ -4,15 +4,27 @@ A domain-specific language (DSL) for writing automated trading strategies in [Op
 
 ## Features
 
-- **38 commands** across 8 categories: Trading, Variables, Control Flow, AI/Analysis, Data Fetch, Agent Orchestration, Advanced, and Functions
+- **80+ commands** across 16 categories: Trading, Variables, Control Flow, AI/Analysis, Data Fetch, Agent Orchestration, Advanced, Functions, TradingView-Style, Bloomberg/Data Access, Time/Schedule, Portfolio, Economic/Political, Scientific/Quantitative, Utility, and PRT Compatibility (40+ ProRealTime commands)
 - **Visual Flow Builder** — drag-and-drop node editor with bidirectional code-to-flow synchronization
-- **Code Editor** — syntax-highlighted editor with live parsing, auto-complete, and error reporting
+- **Operator Nodes** — round/circular operator nodes (Arithmetic, Comparison, Logical, Crossover, String) with multi-port I/O
+- **Flow Toolbar** — Connect mode, Delete, Select All, Zoom In/Out/Fit, Auto-Layout, Export PNG, Undo/Redo, Clear All
+- **Animated Flow Execution** — real-time node highlighting, glowing connection paths, live values on nodes, speed control (Fast/Normal/Slow/Step)
+- **Command Info Icons** — ⓘ icons in sidebar showing floating documentation cards per command
+- **Visual Output Popup** — draggable results modal with Simulation, Backtest, and Flow Trace tabs; equity curve canvas
+- **Code Editor** — syntax-highlighted editor with live parsing, VS Code-style error highlighting with dynamic line height
+- **Standalone Editor Page** — full editor accessible via "Code" link in top navigation bar
+- **AI Assistant** — built-in chat panel with Bearer token auth, reads code/errors/logs to help fix issues
 - **Strategy Compiler** — compiles `.cs` scripts to production-ready `.cjs` strategy modules
-- **Simulation Runner** — test strategies against mock tick data before going live
+- **Save & Deploy Pipeline** — save dialog with strategy name/filename, auto-deploy to `strategies/` for bot engine discovery
+- **Simulation & Backtest** — test strategies with real or cached price data; green play button, instrument selector, multi-tier data fallback (API → DB cache → stream ticks → mock)
 - **AI Integration** — query AI models, generate scripts, analyze logs, and scan sentiment
 - **Agent Orchestration** — spawn agents, manage sessions, mutate configs at runtime
-- **Technical Indicators** — RSI, EMA, SMA, MACD, Bollinger Bands, ATR, ADX, Stochastic, CCI, OBV, VWAP, ROC, and more
+- **30+ Technical Indicators** — RSI, EMA, SMA, MACD, Bollinger Bands (Upper/Lower), ATR, ADX, Stochastic (K/D), CCI, Williams %R, ROC, Aroon, Ichimoku, Parabolic SAR, Keltner, Donchian, OBV, VWAP, CMF, ZScore, Supertrend, and more
+- **Variable Tooltips** — `INPUT_*` declarations and `DEF` comments become editable fields and tooltips in bot dashboard
+- **PRT Compatibility** — 40+ ProRealTime ProBuilder commands (PRT_RSI, PRT_MACD, PRT_BOLLINGER, PRT_ICHIMOKU, etc.)
 - **Export** — `.cs` source, `.json` AST, `.js` compiled output, `.png` flow diagram
+- **Single-Source Sync** — `sync-clawscript.sh` script keeps installer in sync with canonical sources
+- **221 tests** — 82 parser tests + 139 pipeline tests, 100% pass rate
 
 ## Quick Start
 
@@ -185,6 +197,56 @@ clawscript/
 | `CHAIN` | Chain operations — `CHAIN ... ENDCHAIN` |
 | `INCLUDE` | Include script — `INCLUDE <script>` |
 
+### TradingView-Style
+| Command | Description |
+|---------|-------------|
+| `STRATEGY_ENTRY` | Pine Script-style entry — `STRATEGY_ENTRY <name> [DIRECTION <dir>] [STOP <dist>] [LIMIT <dist>]` |
+| `STRATEGY_EXIT` | Pine Script-style exit — `STRATEGY_EXIT <name> [REASON <str>]` |
+| `STRATEGY_CLOSE` | Close all positions — `STRATEGY_CLOSE [REASON <str>]` |
+| `INPUT_INT` | Declare integer input — `INPUT_INT <name> [DEFAULT <val>]` |
+| `INPUT_FLOAT` | Declare float input — `INPUT_FLOAT <name> [DEFAULT <val>]` |
+| `INPUT_BOOL` | Declare boolean input — `INPUT_BOOL <name> [DEFAULT <val>]` |
+| `INPUT_SYMBOL` | Declare symbol input — `INPUT_SYMBOL <name> [DEFAULT <val>]` |
+| `ARRAY_NEW` / `ARRAY_PUSH` | Create and manipulate arrays |
+| `MATRIX_NEW` / `MATRIX_SET` | Create and manipulate matrices |
+
+### Bloomberg / Data Access
+| Command | Description |
+|---------|-------------|
+| `FETCH_HISTORICAL` | BDH-style data — `FETCH_HISTORICAL <metric> [FROM <date>] [TO <date>]` |
+| `FETCH_MEMBERS` | BDS-style members — `FETCH_MEMBERS <index>` |
+| `ECON_DATA` | Economic data — `ECON_DATA <metric> [COUNTRY <code>]` |
+| `ESTIMATE` | Consensus estimate — `ESTIMATE <field> <ticker>` |
+
+### Time / Schedule
+| Command | Description |
+|---------|-------------|
+| `TIME_IN_MARKET` | Time since position opened |
+| `SCHEDULE` | Schedule task — `SCHEDULE <task> [AT <HH:MM>] [REPEAT <daily/weekly>]` |
+| `WAIT_UNTIL` | Wait until condition — `WAIT_UNTIL <condition> [TIMEOUT <seconds>]` |
+| `TASK_SCHEDULE` | Schedule recurring task |
+
+### Portfolio
+| Command | Description |
+|---------|-------------|
+| `MARKET_SCAN` | Scan markets — `MARKET_SCAN <category> [CRITERIA <expr>] [LIMIT <n>]` |
+| `PORTFOLIO_BUILD` | Build portfolio — `PORTFOLIO_BUILD [FROM <scan>] [NUM <n>] [SIZING <mode>]` |
+| `PORTFOLIO_REBALANCE` | Rebalance — `PORTFOLIO_REBALANCE [THRESHOLD <dd_pct>]` |
+
+### Economic / Political
+| Command | Description |
+|---------|-------------|
+| `ECON_INDICATOR` | GDP, CPI, unemployment — `ECON_INDICATOR <metric> [COUNTRY <code>]` |
+| `FISCAL_FLOW` | Capital flows — `FISCAL_FLOW <asset> [WINDOW <period>]` |
+| `ELECTION_IMPACT` | Election market impact — `ELECTION_IMPACT <event>` |
+| `CURRENCY_CARRY` | Carry trade differential — `CURRENCY_CARRY <pair>` |
+| `MONTE_CARLO` | Monte Carlo simulation — `MONTE_CARLO <scenario> [RUNS <n>]` |
+| `RISK_MODEL` | VaR / ES risk — `RISK_MODEL <type> [CONFIDENCE <val>]` |
+
+### PRT Compatibility (40+)
+ProRealTime ProBuilder compatibility layer. All `PRT_` prefixed commands map to ClawScript equivalents:
+`PRT_BUY`, `PRT_SELL`, `PRT_RSI`, `PRT_MACD`, `PRT_BOLLINGER`, `PRT_STOCHASTIC`, `PRT_ATR`, `PRT_CCI`, `PRT_ADX`, `PRT_DONCHIAN`, `PRT_ICHIMOKU`, `PRT_KELTNERCHANNEL`, `PRT_PARABOLICSAR`, `PRT_SUPERTREND`, `PRT_FIBONACCI`, `PRT_PIVOTPOINT`, `PRT_DEMARK`, `PRT_WILLIAMS`, `PRT_VWAP`, `PRT_CUM`, `PRT_HIGHEST`, `PRT_LOWEST`, `PRT_STD`, `PRT_CORRELATION`, `PRT_REGRESSION`, `PRT_CROSS`, `PRT_BARSSINCE`, and more.
+
 ## Operators
 
 | Category | Operators |
@@ -213,15 +275,47 @@ DEF vol = VOLUME()
 
 The editor includes a drag-and-drop node editor that syncs bidirectionally with the code pane:
 
-- **Toolbox sidebar** with 38 command blocks organized in 8 categories
+- **Toolbox sidebar** with 80+ command blocks organized in 16 categories
 - **Drag nodes** onto the canvas — they snap to a grid
 - **Connect ports** between nodes to define execution flow
 - **Inline editing** of node parameters
 - **Zoom/Pan** — scroll to zoom (zooms toward cursor), click+drag to pan
-- **Auto-layout** arranges nodes hierarchically
+- **Auto-layout** arranges nodes in a smart grid (linear chains group into rows, branches spread horizontally)
 - **Undo/Redo** with Ctrl+Z / Ctrl+Y (50-state stack)
 - **Export PNG** of the flow diagram
 - Changes in code update the flow, changes in flow update the code
+
+## Strategy Save & Deploy Pipeline
+
+ClawScript strategies integrate directly with the Claw Trader bot engine:
+
+1. **Write** — Create your strategy in the code editor or flow builder
+2. **Compile & Save** — Opens a dialog with strategy name and filename fields
+3. **Deploy** — The compiled `.cjs` file is saved to `skills/bots/strategies/`
+4. **Discover** — The strategy loader auto-registers the new strategy
+5. **Configure** — `INPUT_*` variables appear as editable fields in the bot dashboard
+6. **Run** — The engine calls `evaluateEntry()` / `evaluateExit()` on each market tick
+
+### Variable Tooltips
+
+Comments on `DEF` and `INPUT_*` lines become tooltips in the bot strategy editor:
+
+```clawscript
+DEF rsi_period = 14       // RSI lookback period (tooltip in bot editor)
+INPUT_INT lookback DEFAULT 50   // Number of candles to analyze
+INPUT_FLOAT risk DEFAULT 0.02  // Risk per trade as decimal
+```
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/clawscript/strategies` | GET | List ClawScript strategies |
+| `/api/clawscript/strategies` | POST | Save compiled strategy |
+| `/api/clawscript/strategies/:name` | DELETE | Remove strategy |
+| `/api/clawscript/templates` | GET | List templates |
+| `/api/clawscript/templates/:name` | GET | Get template source |
+| `/api/clawscript/backtest` | POST | Run backtest with historical data |
 
 ## Compiled Output
 
@@ -245,6 +339,23 @@ class MyStrategy extends BaseStrategy {
 
 Place compiled `.cjs` files in `strategies/` — the auto-discovery loader picks them up automatically.
 
+## AI Assistant
+
+The editor includes a built-in AI assistant (right panel, next to Output/Logs):
+
+- Automatically reads your current code, parse errors, and recent output logs
+- Ask it to fix errors, explain syntax, optimize strategies, or suggest improvements
+- Model selector: CEO Agent (default, routes to OpenClaw gateway) or Grok
+- Full chat history with send on Enter
+
+## Simulation & Backtest
+
+- **Green play button (▶)** runs simulation with real or mock data
+- **Instrument selector**: Set any IG epic manually (e.g. `CS.D.CFAGOLD.CFA.IP` for weekend markets)
+- **Multi-tier data fallback**: IG REST API → DB-cached candles → in-memory stream ticks → mock data
+- **Server-side backtest**: Full indicator computation with up to 2000 historical candles
+- **Results**: P&L, win rate, max drawdown, individual trade list with timestamps
+
 ## Testing
 
 ```bash
@@ -253,16 +364,19 @@ npm test
 node test/test-clawscript-parser.cjs
 ```
 
-82 tests covering all commands, expressions, operators, edge cases, and code generation.
+221 tests total (82 parser + 139 pipeline) covering all commands, expressions, operators, edge cases, code generation, module integration, stub fallbacks, and real BTC data integration.
 
 ## Sample Strategies
 
-Four complete templates are included in `templates/`:
+Seven complete templates are included in `templates/`:
 
 1. **rsi-simple.cs** — Buy when RSI oversold, sell when overbought
 2. **ema-crossover.cs** — EMA fast/slow crossover with trailing stop
 3. **multi-indicator.cs** — RSI + MACD + Bollinger Bands with try/catch error handling
 4. **sentiment-scan.cs** — AI sentiment analysis + market scanner
+5. **btc-scalper.cs** — Fast BTC scalping with RSI + EMA and tight stops
+6. **mean-reversion.cs** — Bollinger Band mean reversion with error handling
+7. **bourse-trackers.cs** — Multi-indicator approach for major index CFDs (US 500, FTSE, DAX)
 
 ## License
 
