@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { parseAndGenerate, parseToAST, lexer, ClawScriptParser, TOKEN_TYPES, KEYWORDS } = require('../lib/clawscript-parser.cjs');
+const { parseAndGenerate, parseToAST, lexer, ClawScriptParser, TOKEN_TYPES, KEYWORDS } = require('./clawscript-parser.cjs');
 
 let passed = 0;
 let failed = 0;
