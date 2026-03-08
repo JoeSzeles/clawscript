@@ -3419,7 +3419,7 @@ function _showAiSettings() {
   overlay.innerHTML =
     '<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px;width:400px;color:#c9d1d9;font-family:system-ui;">' +
       '<h3 style="margin:0 0 12px 0;color:#58a6ff;">AI Assistant Settings</h3>' +
-      '<p style="font-size:12px;color:#8b949e;margin:0 0 12px 0;">Configure a direct AI endpoint for local installations. Leave blank to auto-detect (tries server endpoints first).</p>' +
+      '<p style="font-size:12px;color:#8b949e;margin:0 0 12px 0;">Configure a direct AI endpoint for local installations. Leave blank to auto-detect. Supports Groq, OpenAI, xAI, Ollama (no key needed), and any OpenAI-compatible API.</p>' +
       '<label style="font-size:12px;color:#8b949e;">API Base URL (OpenAI-compatible)</label>' +
       '<input id="csAiCfgUrl" type="text" placeholder="https://api.groq.com/openai/v1 or http://localhost:11434/v1" value="' + (cfg.apiUrl || '') + '" style="width:100%;box-sizing:border-box;padding:6px 8px;margin:4px 0 10px 0;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:13px;">' +
       '<label style="font-size:12px;color:#8b949e;">API Key</label>' +
@@ -3445,7 +3445,6 @@ function _showAiSettings() {
     var url = document.getElementById('csAiCfgUrl').value.trim();
     var key = document.getElementById('csAiCfgKey').value.trim();
     var model = document.getElementById('csAiCfgModel').value.trim();
-    if (url && !key) { alert('API Key is required when using a custom URL'); return; }
     _saveAiConfig({ apiUrl: url, apiKey: key, model: model });
     overlay.remove();
     csLog('AI settings saved.' + (url ? ' Using: ' + url : ' Auto-detect mode.'), 'success');
@@ -3535,10 +3534,8 @@ function _sendToServerEndpoint(url, token, messages, callback) {
 
 function _sendToDirectApi(cfg, messages, callback) {
   var url = cfg.apiUrl.replace(/\/+$/, '') + '/chat/completions';
-  var headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + cfg.apiKey
-  };
+  var headers = { 'Content-Type': 'application/json' };
+  if (cfg.apiKey) headers['Authorization'] = 'Bearer ' + cfg.apiKey;
   var body = {
     model: cfg.model || 'llama-3.3-70b-versatile',
     messages: messages,
