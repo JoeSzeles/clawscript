@@ -1,24 +1,62 @@
-# ClawScript DSL Reference (Agent Skill)
+# ClawScript Handbook — Complete Language Reference
 
-ClawScript is a domain-specific language for writing automated trading strategies. Scripts are written in a simple imperative syntax and compile to JavaScript strategy classes that run inside the Trade Claw Engine.
+ClawScript is a domain-specific language (DSL) for writing automated trading strategies. Scripts are written in a simple imperative syntax and compile to JavaScript strategy classes that run inside the Trade Claw Engine.
 
 ## Quick Start
 
 ```clawscript
+// Simple RSI strategy
 DEF rsi = RSI(14)
+
 IF rsi < 30 THEN
   BUY 1 AT MARKET STOP 20 LIMIT 40 REASON "RSI oversold"
+ENDIF
+
+IF rsi > 70 THEN
+  SELL 1 AT MARKET STOP 20 REASON "RSI overbought"
 ENDIF
 ```
 
 ## Where to Find ClawScript
 
-- **Editor**: IG Dashboard → ClawScript Editor tab
+- **Editor**: IG Dashboard → ClawScript Editor tab (top nav link)
 - **Parser**: `skills/bots/clawscript-parser.cjs`
 - **Flow Builder**: `ig-clawscript-flow.js` (visual node editor)
-- **Templates**: `.openclaw/canvas/clawscript-templates/` (4 sample strategies)
+- **Templates**: `.openclaw/canvas/clawscript-templates/` (7 sample strategies)
 - **Full Docs**: `/__openclaw__/canvas/clawscript-docs.html`
 - **Compiled Strategies**: `skills/bots/strategies/` (`.cjs` files extending `BaseStrategy`)
+- **GitHub Repo**: https://github.com/JoeSzeles/clawscript
+- **Handbook (this file)**: `clawscript-installer/docs/CLAWSCRIPT.md`
+
+## Editor Features
+
+- **Syntax Highlighting**: Color-coded keywords by category (trade=green, AI=purple, data=blue, control=red)
+- **VS Code-style Error Highlighting**: Red wavy underlines on error lines, gutter icons, inline error annotations
+- **AI Assistant Panel**: Built-in chat that reads your code, errors, and logs — ask it to fix issues or explain syntax
+- **Live Parse**: Real-time parsing as you type with statement count display
+- **Instrument Selector**: Set any IG epic for simulation/backtest (not just BTC)
+- **Real Data with Fallback**: IG API → DB-cached candles → in-memory stream ticks → mock data
+- **Green Play Button**: One-click simulation with visual feedback
+- **Templates Dropdown**: 7 built-in templates across 3 sections (Default, ClawScript, Load Custom)
+- **Export**: `.cs` source, `.json` AST, `.js` compiled output
+- **Visual Flow Builder**: Drag-drop node editor with bidirectional code sync
+
+## Strategy Save & Deploy Pipeline
+
+1. Write ClawScript in the editor
+2. Click "Compile & Save" — parses, generates JS, opens save dialog
+3. Enter strategy name and filename (auto-generated)
+4. Save to Bot — strategy file saved to `strategies/` folder
+5. Strategy auto-discovered by bot engine, appears in Claw Trader dashboard with `[CS]` badge
+6. `INPUT_*` and `DEF` variables become editable fields with tooltips in bot config
+
+### API Endpoints (authenticated)
+- `GET /api/clawscript/strategies` — list saved strategies
+- `POST /api/clawscript/strategies` — save new strategy
+- `DELETE /api/clawscript/strategies/:name` — delete strategy
+- `GET /api/clawscript/strategies/:name/schema` — get config schema
+- `GET /api/clawscript/strategies/:name/source` — get source code
+- `POST /api/clawscript/backtest` — run backtest with real/cached data
 
 ## Using the Parser
 
@@ -280,11 +318,153 @@ Place compiled strategies in `skills/bots/strategies/` to auto-register with the
 ## Visual Flow Builder
 
 The flow builder provides a drag-drop node editor:
-- **Toolbox sidebar**: 16 categories, 80+ command nodes
+- **Toolbox sidebar**: 16 categories, 80+ command nodes (collapsed by default)
 - **Drag & drop**: Drag commands onto the canvas
 - **Port connections**: Connect output ports to input ports
 - **Bidirectional sync**: Code changes update flow, flow changes update code
 - **Zoom/Pan**: Scroll to zoom (cursor-relative), click+drag to pan
-- **Auto-layout**: Automatic node arrangement
+- **Auto-layout**: Smart grid layout — linear scripts display ~4 nodes per row
 - **Undo/Redo**: Ctrl+Z / Ctrl+Y
 - **Export**: PNG screenshot of flow diagram
+
+## Simulation & Backtest
+
+### Simulation (▶ play button)
+- Parses script and evaluates AST against price ticks
+- With "Real Data" checked: fetches from IG API for the selected instrument
+- **Fallback chain**: IG API → DB-cached candles (`/api/ig/stream/candles`) → in-memory stream ticks → mock data
+- Instrument selector allows any IG epic (e.g. `CS.D.BITCOIN.CFD.IP`, `CS.D.CFAGOLD.CFA.IP`)
+- Mock data generates 100 BTC-like ticks (~$48k-$52k) for offline testing
+
+### Backtest
+- Sends strategy to server-side backtest engine with full indicator computation
+- Uses same fallback chain: IG API → DB-cached → stream candles → error
+- Returns: P&L, win rate, max drawdown, trade list with entry/exit prices and times
+- Uses up to 2000 historical candles at HOUR resolution
+
+## AI Assistant
+
+Built into the editor's bottom panel (right side):
+- **Model selector**: CEO Agent (default, routes to OpenClaw gateway) or Grok
+- **Context-aware**: Automatically includes current code, parse errors, and recent logs in each prompt
+- **Capabilities**: Fix syntax errors, optimize strategies, explain ClawScript commands, suggest improvements
+- **Chat interface**: Full conversation history with send on Enter
+
+## Data Sources
+
+ClawScript strategies and simulations can access price data through multiple tiers:
+
+1. **IG REST API** — live prices via `/api/ig/pricehistory/:epic` (rate-limited, may return 403 on weekends)
+2. **DB-Cached Candles** — stored in `price_candles` table from Lightstreamer stream, flushed every 10s
+3. **In-Memory Stream** — real-time tick data aggregated into candles at multiple resolutions (1s to 1D)
+4. **Mock Data** — generated sine-wave + noise for offline development
+
+The system automatically builds candles from tick data at all standard resolutions:
+`SECOND, SECOND_2, SECOND_5, SECOND_10, SECOND_20, SECOND_30, SECOND_40, MINUTE, MINUTE_5, MINUTE_15, HOUR, HOUR_4, DAY`
+
+## Extended Indicators (30+)
+
+ClawScript supports 30+ technical indicators in `DEF` statements:
+
+| Indicator | Parameters | Description |
+|-----------|-----------|-------------|
+| `SMA(period)` | 20 | Simple Moving Average |
+| `EMA(period)` | 20 | Exponential Moving Average |
+| `RSI(period)` | 14 | Relative Strength Index |
+| `MACD(fast, slow, signal)` | 12, 26, 9 | MACD line value |
+| `ATR(period)` | 14 | Average True Range |
+| `ADX(period)` | 14 | Average Directional Index |
+| `BOLLINGER_UPPER(period, dev)` | 20, 2 | Bollinger Band upper |
+| `BOLLINGER_LOWER(period, dev)` | 20, 2 | Bollinger Band lower |
+| `STOCHASTIC(period)` | 14 | Stochastic %K |
+| `STOCHASTIC_D(period)` | 14 | Stochastic %D |
+| `CCI(period)` | 20 | Commodity Channel Index |
+| `WILLIAMS_R(period)` | 14 | Williams %R |
+| `ROC(period)` | 12 | Rate of Change |
+| `AROON_UP(period)` | 25 | Aroon Up |
+| `AROON_DOWN(period)` | 25 | Aroon Down |
+| `ICHIMOKU_TENKAN(period)` | 9 | Ichimoku Tenkan-sen |
+| `ICHIMOKU_KIJUN(period)` | 26 | Ichimoku Kijun-sen |
+| `PARABOLIC_SAR(step, max)` | 0.02, 0.2 | Parabolic SAR |
+| `KELTNER_UPPER(period, mult)` | 20, 1.5 | Keltner upper channel |
+| `KELTNER_LOWER(period, mult)` | 20, 1.5 | Keltner lower channel |
+| `DONCHIAN_HIGH(period)` | 20 | Donchian Channel high |
+| `DONCHIAN_LOW(period)` | 20 | Donchian Channel low |
+| `OBV` | — | On-Balance Volume |
+| `VWAP` | — | Volume Weighted Average Price |
+| `CMF(period)` | 20 | Chaikin Money Flow |
+| `ZSCORE(period)` | 20 | Z-Score |
+| `SUPERTREND(period, mult)` | 10, 3 | Supertrend |
+| `LAST_PRICE` | — | Most recent price |
+| `VOLUME` | — | Current volume |
+
+## Operator Reference
+
+### Arithmetic
+`+`, `-`, `*`, `/`, `%` — Standard math operators in expressions
+
+### Comparison
+`<`, `>`, `<=`, `>=`, `==`, `!=` — Used in IF conditions
+
+### Logical
+`AND`, `OR`, `NOT` — Combine conditions
+
+### Crossover
+`CROSSES OVER`, `CROSSES UNDER` — Detect indicator crossovers
+
+### String
+`CONTAINS` — Check if string contains substring
+
+## Visual Flow Builder — New Features
+
+### Operator Nodes
+- Round/circular shapes with operator symbol in center
+- 2 input ports (left/right operand) + 1 output port (NOT has 1 input)
+- Categories: Arithmetic, Comparison, Logical, Crossover, String
+- Drag from "Operators" section in sidebar
+
+### Multiple I/O Ports
+- DEF nodes support fan-out: one output → multiple consumer nodes
+- Visual spread with connection count badges
+- Operator nodes accept multiple incoming connections
+
+### Flow Toolbar
+- Connect mode, Delete, Select All, Zoom In/Out/Fit, Auto-Layout, Export PNG, Undo/Redo, Clear All
+
+### Command Info Icons
+- ⓘ icon next to each command in sidebar
+- Click to see floating documentation card with syntax, parameters, description
+
+### Animated Flow Execution
+- Active node glow with pulse animation
+- Connection paths animate with flowing dashes
+- Real values displayed on nodes (e.g., RSI=42.3)
+- Color coding: green (signal), red (failed), blue (data)
+- Speed control: Fast/Normal/Slow/Step
+
+### Visual Output Popup
+- Results button → draggable modal with tabs
+- Simulation: signals, variables, trade list
+- Backtest: equity curve canvas, P&L, drawdown, trade list
+- Flow trace: step-by-step execution log
+- API: `GET /api/clawscript/results` for programmatic access
+
+## Standalone Editor Page
+
+Access via "Code" link in top navigation bar. Opens `/__openclaw__/canvas/clawscript-editor.html` with full editor, flow builder, AI assistant, and output panel.
+
+## New API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/clawscript/results` | GET | Last backtest/simulation results |
+| `/api/clawscript/results` | POST | Store results from UI |
+| `/api/clawscript/sync` | POST | Run sync script to copy canonical sources to installer |
+
+## Test Suite
+
+- **82 parser tests**: Lexer, AST, code generation for all command categories
+- **139 pipeline tests**: End-to-end parse → compile → save → load across 21 categories
+- **100% pass rate** including real BTC data integration tests
+- Test runner: `skills/bots/tests/test-clawscript-parser.cjs` and `test-clawscript-pipeline.cjs`
+- Report saved to: `.openclaw/clawscript-pipeline-report.json`
