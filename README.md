@@ -7,7 +7,7 @@ A domain-specific language (DSL) for writing automated trading strategies in [Op
 ## Features
 
 - **80+ commands** across 16 categories: Trading, Variables, Control Flow, AI/Analysis, Data Fetch, Agent Orchestration, Advanced, Functions, TradingView-Style, Bloomberg/Data Access, Time/Schedule, Portfolio, Economic/Political, Scientific/Quantitative, Utility, and PRT Compatibility (40+ ProRealTime commands)
-- **22 Automation Commands** — define tasks, chain workflows, schedule cron jobs, send notifications via chat channels and email, read/write files, and publish scripts — all from within `.cs` scripts
+- **21 Automation Commands** — define tasks, chain workflows, schedule cron jobs, send notifications via chat channels and email, read/write/execute files, and publish scripts — all from within `.cs` scripts
 - **Visual Flow Builder** — drag-and-drop node editor with bidirectional code-to-flow synchronization
 - **Operator Nodes** — round/circular operator nodes (Arithmetic, Comparison, Logical, Crossover, String) with multi-port I/O
 - **Flow Toolbar** — Connect mode, Delete, Select All, Zoom In/Out/Fit, Auto-Layout, Export PNG, Undo/Redo, Clear All
@@ -49,7 +49,7 @@ Real-time simulation output showing parsed statement count, data fetching with a
 
 ## OpenClaw Automation
 
-ClawScript v1.1.0 introduces 22 automation commands via the `openclaw-automation` module. These commands let scripts define reusable tasks, chain workflows, schedule recurring jobs, and send notifications — turning ClawScript from a strategy language into a full workflow automation DSL.
+ClawScript v1.1.0 introduces 21 automation commands via the `openclaw-automation` module. These commands let scripts define reusable tasks, chain workflows, schedule recurring jobs, and send notifications — turning ClawScript from a strategy language into a full workflow automation DSL.
 
 ### Automation Commands
 
@@ -58,21 +58,24 @@ ClawScript v1.1.0 introduces 22 automation commands via the `openclaw-automation
 | `TASK_DEFINE` | Define a named task with a body — `TASK_DEFINE <name> ... ENDTASK` |
 | `TASK_ASSIGN` | Assign a task to an agent — `TASK_ASSIGN <task> <agent>` |
 | `TASK_CHAIN` | Run tasks in sequence — `TASK_CHAIN <task1> <task2> [...]` |
+| `TASK_PARALLEL` | Run tasks concurrently — `TASK_PARALLEL <task1> <task2> [...]` |
 | `TASK_SCHEDULE` | Schedule recurring task — `TASK_SCHEDULE <task> <cron>` |
-| `AGENT_CREATE` | Create a new agent — `AGENT_CREATE <name> <role>` |
-| `AGENT_LIST` | List active agents — `AGENT_LIST [FILTER <role>]` |
-| `AGENT_DESTROY` | Remove an agent — `AGENT_DESTROY <name>` |
-| `SKILL_REGISTER` | Register a skill — `SKILL_REGISTER <name> <handler>` |
-| `SKILL_INVOKE` | Invoke a skill — `SKILL_INVOKE <name> [ARGS <json>]` |
+| `TASK_LOG` | Log from within a task — `TASK_LOG <message>` |
+| `TASK_SHOW_FLOW` | Display task execution flow diagram |
+| `AGENT_SPAWN` | Create a new agent — `AGENT_SPAWN <name> <prompt>` |
+| `AGENT_CALL` | Call an agent — `AGENT_CALL <agent> <command>` |
+| `AGENT_PASS` | Pass data to an agent — `AGENT_PASS <agent> <data>` |
+| `AGENT_TERMINATE` | Terminate an agent — `AGENT_TERMINATE <name>` |
+| `SKILL_CALL` | Invoke a skill — `SKILL_CALL <name> [ARGS <json>]` |
 | `FILE_READ` | Read a file — `FILE_READ <path>` |
 | `FILE_WRITE` | Write to a file — `FILE_WRITE <path> <content>` |
+| `FILE_EXECUTE` | Execute a file/script — `FILE_EXECUTE <path>` |
+| `FILE_PARSE` | Parse a file — `FILE_PARSE <path> [FORMAT <fmt>]` |
 | `CHANNEL_SEND` | Send to a channel — `CHANNEL_SEND <channel> <message>` |
-| `CHANNEL_LISTEN` | Listen on a channel — `CHANNEL_LISTEN <channel> [TIMEOUT <ms>]` |
 | `EMAIL_SEND` | Send email — `EMAIL_SEND <to> SUBJECT <subj> BODY <body>` |
 | `CRON_CREATE` | Create cron job — `CRON_CREATE <name> <schedule> <command>` |
-| `CRON_DELETE` | Delete cron job — `CRON_DELETE <name>` |
-| `CRON_LIST` | List cron jobs — `CRON_LIST` |
-| `PUBLISH_SCRIPT` | Publish a script — `PUBLISH_SCRIPT <name> [VERSION <ver>]` |
+| `CRON_CALL` | Trigger a cron job manually — `CRON_CALL <name>` |
+| `PUBLISH_CANVAS` | Publish a canvas page — `PUBLISH_CANVAS <name> [VERSION <ver>]` |
 
 ### Automation Example
 
