@@ -31,12 +31,16 @@ safe_rm() {
 }
 
 safe_rm_glob() {
-  local pattern="$1" label="$2"
+  local dir="$1" pattern="$2" label="$3"
+  if [ ! -d "$dir" ]; then return 0; fi
   local count=0
-  for f in $pattern; do
+  local old_nullglob=$(shopt -p nullglob 2>/dev/null)
+  shopt -s nullglob
+  for f in "$dir"/$pattern; do
     [ -f "$f" ] || continue
-    rm -f "$f" 2>/dev/null && count=$((count + 1))
+    rm -f "$f" && count=$((count + 1))
   done
+  eval "$old_nullglob" 2>/dev/null
   if [ $count -gt 0 ]; then
     echo "  DEL   $label ($count files)"
     REMOVED=$((REMOVED + count))
@@ -49,7 +53,7 @@ safe_rm "$BOTS_DIR/indicators.cjs" "indicators.cjs"
 safe_rm "$BOTS_DIR/clawscript-ai-handler.cjs" "clawscript-ai-handler.cjs"
 
 echo "  [2/6] OpenClaw stubs"
-safe_rm_glob "$BOTS_DIR/openclaw-*.cjs" "openclaw stubs"
+safe_rm_glob "$BOTS_DIR" "openclaw-*.cjs" "openclaw stubs"
 
 echo "  [3/6] Strategy framework"
 safe_rm "$STRATS_DIR/base-strategy.cjs" "base-strategy.cjs"

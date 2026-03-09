@@ -54,11 +54,15 @@ safe_update() {
   [ -f "$src" ] && cp -f "$src" "$dst" 2>/dev/null
 }
 
-safe_update_glob() {
-  local pattern="$1" dst="$2"
-  for f in $pattern; do
-    [ -f "$f" ] && cp -f "$f" "$dst" 2>/dev/null
+safe_update_dir() {
+  local srcdir="$1" pattern="$2" dstdir="$3"
+  [ -d "$srcdir" ] || return 0
+  local old_nullglob=$(shopt -p nullglob 2>/dev/null)
+  shopt -s nullglob
+  for f in "$srcdir"/$pattern; do
+    [ -f "$f" ] && cp -f "$f" "$dstdir"
   done
+  eval "$old_nullglob" 2>/dev/null
 }
 
 mkdir -p "$SCRIPT_DIR/editor" "$SCRIPT_DIR/lib" "$SCRIPT_DIR/lib/openclaw" "$SCRIPT_DIR/strategies" "$SCRIPT_DIR/templates" "$SCRIPT_DIR/docs" 2>/dev/null
@@ -66,11 +70,11 @@ mkdir -p "$SCRIPT_DIR/editor" "$SCRIPT_DIR/lib" "$SCRIPT_DIR/lib/openclaw" "$SCR
 safe_update "$SRC/editor/clawscript-editor.html" "$SCRIPT_DIR/editor/"
 safe_update "$SRC/editor/ig-clawscript-ui.js" "$SCRIPT_DIR/editor/"
 safe_update "$SRC/editor/ig-clawscript-flow.js" "$SCRIPT_DIR/editor/"
-safe_update_glob "$SRC/lib/*.cjs" "$SCRIPT_DIR/lib/"
-safe_update_glob "$SRC/lib/openclaw/*.cjs" "$SCRIPT_DIR/lib/openclaw/"
-safe_update_glob "$SRC/strategies/*.cjs" "$SCRIPT_DIR/strategies/"
-safe_update_glob "$SRC/templates/*.cs" "$SCRIPT_DIR/templates/"
-safe_update_glob "$SRC/docs/*" "$SCRIPT_DIR/docs/"
+safe_update_dir "$SRC/lib" "*.cjs" "$SCRIPT_DIR/lib/"
+safe_update_dir "$SRC/lib/openclaw" "*.cjs" "$SCRIPT_DIR/lib/openclaw/"
+safe_update_dir "$SRC/strategies" "*.cjs" "$SCRIPT_DIR/strategies/"
+safe_update_dir "$SRC/templates" "*.cs" "$SCRIPT_DIR/templates/"
+safe_update_dir "$SRC/docs" "*" "$SCRIPT_DIR/docs/"
 safe_update "$SRC/serve.cjs" "$SCRIPT_DIR/"
 safe_update "$SRC/VERSION" "$SCRIPT_DIR/"
 safe_update "$SRC/install.sh" "$SCRIPT_DIR/"

@@ -30,10 +30,10 @@ ERRORS=0
 safe_cp() {
   local src="$1" dst="$2" label="$3"
   if [ ! -f "$src" ]; then
-    echo "  SKIP  $label (source not found: $src)"
+    echo "  SKIP  $label (source not found)"
     return 0
   fi
-  if cp -f "$src" "$dst" 2>/dev/null; then
+  if cp -f "$src" "$dst"; then
     echo "  OK    $label"
   else
     echo "  FAIL  $label"
@@ -42,13 +42,27 @@ safe_cp() {
 }
 
 safe_cp_glob() {
-  local pattern="$1" dst="$2" label="$3"
-  local count=0
-  for f in $pattern; do
+  local dir="$1" pattern="$2" dst="$3" label="$4"
+  if [ ! -d "$dir" ]; then
+    echo "  SKIP  $label (directory not found)"
+    return 0
+  fi
+  local count=0 fails=0
+  local old_nullglob=$(shopt -p nullglob 2>/dev/null)
+  shopt -s nullglob
+  for f in "$dir"/$pattern; do
     [ -f "$f" ] || continue
-    cp -f "$f" "$dst" 2>/dev/null && count=$((count + 1))
+    if cp -f "$f" "$dst"; then
+      count=$((count + 1))
+    else
+      fails=$((fails + 1))
+    fi
   done
-  if [ $count -gt 0 ]; then
+  eval "$old_nullglob" 2>/dev/null
+  if [ $fails -gt 0 ]; then
+    echo "  FAIL  $label ($fails of $((count + fails)) failed)"
+    ERRORS=$((ERRORS + fails))
+  elif [ $count -gt 0 ]; then
     echo "  OK    $label ($count files)"
   else
     echo "  SKIP  $label (no matching files)"
@@ -63,7 +77,7 @@ safe_cp "$SCRIPT_DIR/lib/indicators.cjs" "$BOTS_DIR/" "indicators.cjs"
 safe_cp "$SCRIPT_DIR/lib/clawscript-ai-handler.cjs" "$BOTS_DIR/" "clawscript-ai-handler.cjs"
 
 echo "  [2/7] OpenClaw stubs"
-safe_cp_glob "$SCRIPT_DIR/lib/openclaw/openclaw-*.cjs" "$BOTS_DIR/" "openclaw stubs"
+safe_cp_glob "$SCRIPT_DIR/lib/openclaw" "openclaw-*.cjs" "$BOTS_DIR/" "openclaw stubs"
 
 echo "  [3/7] Strategy framework"
 safe_cp "$SCRIPT_DIR/strategies/base-strategy.cjs" "$STRATS_DIR/" "base-strategy.cjs"
@@ -73,10 +87,10 @@ echo "  [4/7] Editor files"
 safe_cp "$SCRIPT_DIR/editor/clawscript-editor.html" "$CANVAS_DIR/" "clawscript-editor.html"
 safe_cp "$SCRIPT_DIR/editor/ig-clawscript-ui.js" "$CANVAS_DIR/" "ig-clawscript-ui.js"
 safe_cp "$SCRIPT_DIR/editor/ig-clawscript-flow.js" "$CANVAS_DIR/" "ig-clawscript-flow.js"
-safe_cp "$SCRIPT_DIR/serve.cjs" "$OPENCLAW_ROOT/" "serve-clawscript.cjs"
+safe_cp "$SCRIPT_DIR/serve.cjs" "$OPENCLAW_ROOT/serve-clawscript.cjs" "serve-clawscript.cjs"
 
 echo "  [5/7] Templates"
-safe_cp_glob "$SCRIPT_DIR/templates/*.cs" "$TEMPLATES_DIR/" "strategy templates"
+safe_cp_glob "$SCRIPT_DIR/templates" "*.cs" "$TEMPLATES_DIR/" "strategy templates"
 
 echo "  [6/7] Documentation"
 safe_cp "$SCRIPT_DIR/docs/clawscript-docs.html" "$CANVAS_DIR/" "clawscript-docs.html"
