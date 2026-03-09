@@ -43,7 +43,7 @@ The editor combines a syntax-highlighted code pane (left), a visual flow builder
 ### Visual Flow Builder
 ![Flow builder with drag-and-drop nodes and operator connections](screenshots/clawscript-flow-builder.png)
 
-The flow view renders ClawScript as a directed graph. Rectangular nodes represent commands (trading, variables, control flow), circular nodes represent operators (AND, OR, comparisons, crossovers). The Commands sidebar organizes all 80+ blocks into collapsible categories.
+The flow view renders ClawScript as a directed graph. Rectangular nodes represent commands (trading, variables, control flow), circular nodes represent operators (AND, OR, comparisons, crossovers). The Commands sidebar organizes all 100+ blocks into collapsible categories.
 
 ### Simulation Output
 ![Simulation running with parsed statements and indicator values](screenshots/clawscript-simulation.png)
@@ -355,7 +355,7 @@ DEF vol = VOLUME()
 
 The editor includes a drag-and-drop node editor that syncs bidirectionally with the code pane:
 
-- **Toolbox sidebar** with 80+ command blocks organized in 16 categories
+- **Toolbox sidebar** with 100+ command blocks organized in 20+ categories (including 5 Indicator sub-categories and Notifications)
 - **Drag nodes** onto the canvas — they snap to a grid
 - **Connect ports** between nodes to define execution flow
 - **Inline editing** of node parameters

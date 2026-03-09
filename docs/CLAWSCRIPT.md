@@ -72,7 +72,7 @@ const { js, ast: parsedAst } = parseAndGenerate(scriptCode, 'MyStrategy');
 
 `parseAndGenerate(code, name)` returns `{ js, ast }` where `js` is a complete Node.js module exporting a strategy class.
 
-## All Commands (80+ total)
+## All Commands (100+ total)
 
 ### Trading (6)
 | Command | Syntax | Description |
@@ -321,7 +321,7 @@ Place compiled strategies in `skills/bots/strategies/` to auto-register with the
 ## Visual Flow Builder
 
 The flow builder provides a drag-drop node editor:
-- **Toolbox sidebar**: 16 categories, 80+ command nodes (collapsed by default)
+- **Toolbox sidebar**: 20+ categories, 100+ command nodes (collapsed by default)
 - **Drag & drop**: Drag commands onto the canvas
 - **Port connections**: Connect output ports to input ports
 - **Bidirectional sync**: Code changes update flow, flow changes update code
