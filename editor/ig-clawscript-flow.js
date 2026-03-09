@@ -69,6 +69,50 @@ var NODE_CATS = [
       { cmd: 'WAIT_FOR_REPLY', doc: 'Wait for agent reply', params: [{k:'sessionId',l:'Session',d:''},{k:'timeout',l:'Timeout',d:''}] }
     ]
   },
+  { id: 'indicators_trend', label: 'Indicators: Trend', color: '#58a6ff', bg: '#0d2240',
+    items: [
+      { cmd: 'IND_EMA', doc: 'Exponential Moving Average', params: [{k:'period',l:'Period',d:'20'},{k:'source',l:'Source',d:'close'}] },
+      { cmd: 'IND_SMA', doc: 'Simple Moving Average', params: [{k:'period',l:'Period',d:'20'},{k:'source',l:'Source',d:'close'}] },
+      { cmd: 'IND_MACD', doc: 'MACD (Moving Average Convergence Divergence)', params: [{k:'fast',l:'Fast',d:'12'},{k:'slow',l:'Slow',d:'26'},{k:'signal',l:'Signal',d:'9'}] },
+      { cmd: 'IND_ADX', doc: 'Average Directional Index', params: [{k:'period',l:'Period',d:'14'}] },
+      { cmd: 'IND_PARABOLICSAR', doc: 'Parabolic SAR', params: [{k:'accel',l:'Accel',d:'0.02'},{k:'max',l:'Max',d:'0.2'}] },
+      { cmd: 'IND_SUPERTREND', doc: 'Supertrend', params: [{k:'period',l:'Period',d:'10'},{k:'mult',l:'Multiplier',d:'3'}] },
+      { cmd: 'IND_AROON', doc: 'Aroon Up/Down', params: [{k:'period',l:'Period',d:'25'}] },
+      { cmd: 'IND_ICHIMOKU', doc: 'Ichimoku Cloud', params: [{k:'tenkan',l:'Tenkan',d:'9'},{k:'kijun',l:'Kijun',d:'26'},{k:'senkou',l:'Senkou',d:'52'}] }
+    ]
+  },
+  { id: 'indicators_oscillators', label: 'Indicators: Oscillators', color: '#bc8cff', bg: '#2d1b4e',
+    items: [
+      { cmd: 'IND_RSI', doc: 'Relative Strength Index', params: [{k:'period',l:'Period',d:'14'},{k:'source',l:'Source',d:'close'}] },
+      { cmd: 'IND_STOCHASTIC', doc: 'Stochastic Oscillator', params: [{k:'k',l:'%K Period',d:'14'},{k:'d',l:'%D Smooth',d:'3'},{k:'smooth',l:'Smooth',d:'3'}] },
+      { cmd: 'IND_CCI', doc: 'Commodity Channel Index', params: [{k:'period',l:'Period',d:'20'}] },
+      { cmd: 'IND_WILLIAMSR', doc: 'Williams %R', params: [{k:'period',l:'Period',d:'14'}] },
+      { cmd: 'IND_ROC', doc: 'Rate of Change', params: [{k:'period',l:'Period',d:'12'},{k:'source',l:'Source',d:'close'}] },
+      { cmd: 'IND_ULTIMATEOSCILLATOR', doc: 'Ultimate Oscillator', params: [{k:'fast',l:'Fast',d:'7'},{k:'mid',l:'Mid',d:'14'},{k:'slow',l:'Slow',d:'28'}] }
+    ]
+  },
+  { id: 'indicators_volatility', label: 'Indicators: Volatility', color: '#f0883e', bg: '#3d2200',
+    items: [
+      { cmd: 'IND_ATR', doc: 'Average True Range', params: [{k:'period',l:'Period',d:'14'}] },
+      { cmd: 'IND_BOLLINGER', doc: 'Bollinger Bands', params: [{k:'period',l:'Period',d:'20'},{k:'sd',l:'Std Dev',d:'2'}] },
+      { cmd: 'IND_KELTNER', doc: 'Keltner Channel', params: [{k:'period',l:'Period',d:'20'},{k:'mult',l:'Multiplier',d:'1.5'}] },
+      { cmd: 'IND_DONCHIAN', doc: 'Donchian Channel', params: [{k:'period',l:'Period',d:'20'}] },
+      { cmd: 'IND_CHAIKINVOLATILITY', doc: 'Chaikin Volatility', params: [{k:'period',l:'Period',d:'10'},{k:'roc',l:'ROC Period',d:'10'}] },
+      { cmd: 'IND_ZSCORE', doc: 'Z-Score', params: [{k:'period',l:'Period',d:'20'},{k:'source',l:'Source',d:'close'}] }
+    ]
+  },
+  { id: 'indicators_volume', label: 'Indicators: Volume', color: '#7ee787', bg: '#1b4332',
+    items: [
+      { cmd: 'IND_OBV', doc: 'On Balance Volume', params: [] },
+      { cmd: 'IND_VWAP', doc: 'Volume Weighted Average Price', params: [] },
+      { cmd: 'IND_CMF', doc: 'Chaikin Money Flow', params: [{k:'period',l:'Period',d:'20'}] }
+    ]
+  },
+  { id: 'indicators_other', label: 'Indicators: Other', color: '#d2a8ff', bg: '#2d1b4e',
+    items: [
+      { cmd: 'IND_FIBONACCI', doc: 'Fibonacci Retracement Levels', params: [{k:'high',l:'High',d:''},{k:'low',l:'Low',d:''}] }
+    ]
+  },
   { id: 'advanced', label: 'Advanced', color: '#ffa657', bg: '#2d1b00',
     items: [
       { cmd: 'CRASH_SCAN', doc: 'Enable/disable crash scanner', params: [{k:'state',l:'State',d:'ON'}] },
@@ -197,15 +241,15 @@ var NODE_CATS = [
   },
   { id: 'agent_mgmt', label: 'Agent Management', color: '#f0883e', bg: '#3d2200',
     items: [
-      { cmd: 'AGENT_SPAWN', doc: 'Spawn a new agent with instructions', params: [{k:'name',l:'Name',d:''},{k:'prompt',l:'Prompt',d:''}] },
-      { cmd: 'AGENT_CALL', doc: 'Call an agent and get result', params: [{k:'agent',l:'Agent',d:''},{k:'command',l:'Command',d:''}] },
+      { cmd: 'AGENT_SPAWN', doc: 'Spawn a new agent with instructions', params: [{k:'name',l:'Name',d:''},{k:'prompt',l:'Prompt',d:''},{k:'timeout',l:'Timeout',d:''}] },
+      { cmd: 'AGENT_CALL', doc: 'Call an agent and get result', params: [{k:'agent',l:'Agent',d:''},{k:'command',l:'Command',d:''},{k:'timeout',l:'Timeout',d:''}] },
       { cmd: 'AGENT_PASS', doc: 'Pass data to another agent', params: [{k:'from',l:'Data Var',d:''},{k:'to',l:'Agent',d:''}] },
-      { cmd: 'AGENT_TERMINATE', doc: 'Terminate a running agent', params: [{k:'agent',l:'Agent',d:''}] }
+      { cmd: 'AGENT_TERMINATE', doc: 'Terminate a running agent', params: [{k:'agent',l:'Agent',d:''},{k:'reason',l:'Reason',d:''}] }
     ]
   },
   { id: 'skills_tools', label: 'Skills & Tools', color: '#3fb950', bg: '#0d3117',
     items: [
-      { cmd: 'SKILL_CALL', doc: 'Invoke a registered skill', params: [{k:'skill',l:'Skill',d:''},{k:'args',l:'Args',d:''}] },
+      { cmd: 'SKILL_CALL', doc: 'Invoke a registered skill', params: [{k:'skill',l:'Skill',d:''},{k:'args',l:'Args',d:''},{k:'timeout',l:'Timeout',d:''}] },
       { cmd: 'CRON_CREATE', doc: 'Create a cron schedule', params: [{k:'name',l:'Name',d:''},{k:'schedule',l:'Schedule',d:''},{k:'run',l:'Run',d:''}] },
       { cmd: 'CRON_CALL', doc: 'Trigger a cron job manually', params: [{k:'name',l:'Name',d:''}] },
       { cmd: 'WEB_FETCH', doc: 'HTTP fetch from URL', params: [{k:'url',l:'URL',d:''},{k:'method',l:'Method',d:'GET'},{k:'timeout',l:'Timeout',d:''}] },
@@ -225,6 +269,17 @@ var NODE_CATS = [
       { cmd: 'CHANNEL_SEND', doc: 'Send message to channel', params: [{k:'channel',l:'Channel',d:''},{k:'message',l:'Message',d:''}] },
       { cmd: 'EMAIL_SEND', doc: 'Send email message', params: [{k:'to',l:'To',d:''},{k:'subject',l:'Subject',d:''},{k:'body',l:'Body',d:''}] },
       { cmd: 'PUBLISH_CANVAS', doc: 'Publish content to canvas', params: [{k:'canvas',l:'Canvas',d:''},{k:'content',l:'Content',d:''}] }
+    ]
+  },
+  { id: 'notifications', label: 'Notifications', color: '#ff6ac1', bg: '#3d1a3d',
+    items: [
+      { cmd: 'NOTIFY', doc: 'Send browser notification', params: [{k:'message',l:'Message',d:''},{k:'level',l:'Level',d:'info'}] },
+      { cmd: 'POPUP', doc: 'Open styled modal popup with HTML content', params: [{k:'title',l:'Title',d:''},{k:'content',l:'Content',d:''}] },
+      { cmd: 'TOAST', doc: 'Show temporary toast overlay (auto-dismisses)', params: [{k:'message',l:'Message',d:''},{k:'duration',l:'Duration (ms)',d:'3000'}] },
+      { cmd: 'TELEMETRY_START', doc: 'Open real-time telemetry window', params: [{k:'label',l:'Label',d:''}] },
+      { cmd: 'TELEMETRY_LOG', doc: 'Log data point to telemetry window', params: [{k:'key',l:'Key',d:''},{k:'value',l:'Value',d:''}] },
+      { cmd: 'TELEMETRY_STOP', doc: 'Close telemetry session', params: [] },
+      { cmd: 'DISPLAY', doc: 'Display data in popup (table/chart/JSON)', params: [{k:'data',l:'Data',d:''},{k:'format',l:'Format',d:'json'}] }
     ]
   },
   { id: 'utility', label: 'Utility', color: '#8b949e', bg: '#21262d',
@@ -1952,6 +2007,46 @@ FlowEngine.prototype.nodeToLine = function(node) {
     case 'CHANNEL_SEND': return 'CHANNEL_SEND "' + (p.channel || '') + '" "' + (p.message || '') + '"';
     case 'EMAIL_SEND': return 'EMAIL_SEND "' + (p.to || '') + '" "' + (p.body || '') + '"' + (p.subject ? ' SUBJECT "' + p.subject + '"' : '');
     case 'PUBLISH_CANVAS': return 'PUBLISH_CANVAS "' + (p.canvas || '') + '"' + (p.content ? ' CONTENT "' + p.content + '"' : '');
+    case 'NOTIFY':
+      var ntf = 'NOTIFY "' + (p.message || '') + '"';
+      if (p.level && p.level !== 'info') ntf += ' LEVEL "' + p.level + '"';
+      return ntf;
+    case 'POPUP': return 'POPUP "' + (p.title || '') + '"' + (p.content ? ' WITH "' + p.content + '"' : '');
+    case 'TOAST':
+      var tst = 'TOAST "' + (p.message || '') + '"';
+      if (p.duration && p.duration !== '3000') tst += ' DURATION ' + p.duration;
+      return tst;
+    case 'TELEMETRY_START': return 'TELEMETRY_START "' + (p.label || '') + '"';
+    case 'TELEMETRY_LOG': return 'TELEMETRY_LOG "' + (p.key || '') + '" ' + (p.value || '0');
+    case 'TELEMETRY_STOP': return 'TELEMETRY_STOP';
+    case 'DISPLAY':
+      var dsp = 'DISPLAY ' + (p.data || 'data');
+      if (p.format && p.format !== 'json') dsp += ' FORMAT "' + p.format + '"';
+      return dsp;
+    case 'IND_EMA': return 'DEF ema = INDICATOR("EMA", ' + (p.period || '20') + ')';
+    case 'IND_SMA': return 'DEF sma = INDICATOR("SMA", ' + (p.period || '20') + ')';
+    case 'IND_MACD': return 'DEF macd = INDICATOR("MACD", ' + (p.fast || '12') + ', ' + (p.slow || '26') + ', ' + (p.signal || '9') + ')';
+    case 'IND_ADX': return 'DEF adx = INDICATOR("ADX", ' + (p.period || '14') + ')';
+    case 'IND_PARABOLICSAR': return 'DEF psar = INDICATOR("ParabolicSAR", ' + (p.accel || '0.02') + ', ' + (p.max || '0.2') + ')';
+    case 'IND_SUPERTREND': return 'DEF supertrend = INDICATOR("Supertrend", ' + (p.period || '10') + ', ' + (p.mult || '3') + ')';
+    case 'IND_AROON': return 'DEF aroon = INDICATOR("Aroon", ' + (p.period || '25') + ')';
+    case 'IND_ICHIMOKU': return 'DEF ichimoku = INDICATOR("Ichimoku", ' + (p.tenkan || '9') + ', ' + (p.kijun || '26') + ', ' + (p.senkou || '52') + ')';
+    case 'IND_RSI': return 'DEF rsi = INDICATOR("RSI", ' + (p.period || '14') + ')';
+    case 'IND_STOCHASTIC': return 'DEF stoch = INDICATOR("Stochastic", ' + (p.k || '14') + ', ' + (p.d || '3') + ', ' + (p.smooth || '3') + ')';
+    case 'IND_CCI': return 'DEF cci = INDICATOR("CCI", ' + (p.period || '20') + ')';
+    case 'IND_WILLIAMSR': return 'DEF willr = INDICATOR("WilliamsR", ' + (p.period || '14') + ')';
+    case 'IND_ROC': return 'DEF roc = INDICATOR("ROC", ' + (p.period || '12') + ')';
+    case 'IND_ULTIMATEOSCILLATOR': return 'DEF ultosc = INDICATOR("UltimateOscillator", ' + (p.fast || '7') + ', ' + (p.mid || '14') + ', ' + (p.slow || '28') + ')';
+    case 'IND_ATR': return 'DEF atr = INDICATOR("ATR", ' + (p.period || '14') + ')';
+    case 'IND_BOLLINGER': return 'DEF bb = INDICATOR("Bollinger", ' + (p.period || '20') + ', ' + (p.sd || '2') + ')';
+    case 'IND_KELTNER': return 'DEF kc = INDICATOR("Keltner", ' + (p.period || '20') + ', ' + (p.mult || '1.5') + ')';
+    case 'IND_DONCHIAN': return 'DEF dc = INDICATOR("Donchian", ' + (p.period || '20') + ')';
+    case 'IND_CHAIKINVOLATILITY': return 'DEF chvol = INDICATOR("ChaikinVolatility", ' + (p.period || '10') + ', ' + (p.roc || '10') + ')';
+    case 'IND_ZSCORE': return 'DEF zscore = INDICATOR("ZScore", ' + (p.period || '20') + ')';
+    case 'IND_OBV': return 'DEF obv = INDICATOR("OBV")';
+    case 'IND_VWAP': return 'DEF vwap = INDICATOR("VWAP")';
+    case 'IND_CMF': return 'DEF cmf = INDICATOR("CMF", ' + (p.period || '20') + ')';
+    case 'IND_FIBONACCI': return 'DEF fib = INDICATOR("Fibonacci", ' + (p.high || 'high') + ', ' + (p.low || 'low') + ')';
     case 'OP_ADD': case 'OP_SUB': case 'OP_MUL': case 'OP_DIV': case 'OP_MOD':
     case 'OP_LT': case 'OP_GT': case 'OP_LTE': case 'OP_GTE': case 'OP_EQ': case 'OP_NEQ':
     case 'OP_AND': case 'OP_OR': case 'OP_NOT':
