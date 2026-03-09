@@ -117,6 +117,23 @@ ENDIF
 
 ## Installation / Update / Uninstall
 
+  > **Windows permissions:** The `.openclaw\canvas` directory is often created by the OpenClaw npm installer with admin privileges. If your AI agent or scripts report "success" but files don't appear, it's a permissions issue. See [Troubleshooting: Windows Permissions](#troubleshooting-windows-permissions) below.
+
+  ### Quick Install (any OS, just needs Node.js)
+
+  The simplest method — downloads files directly from GitHub, no git needed:
+
+  ```bash
+  # Download and run (works in PowerShell, bash, or Termux)
+  curl -o install-node.cjs https://raw.githubusercontent.com/JoeSzeles/clawscript/main/install-node.cjs
+  node install-node.cjs
+  ```
+
+  On Windows PowerShell:
+  ```powershell
+  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/JoeSzeles/clawscript/main/install-node.cjs" -OutFile install-node.cjs; node install-node.cjs
+  ```
+
   ### Windows (PowerShell)
 
   **Install:**
@@ -204,6 +221,29 @@ ENDIF
   | Templates | `.openclaw/canvas/clawscript-templates/` |
   | Documentation | `.openclaw/canvas/` + `skills/clawscript/` |
 
+  ### Troubleshooting: Windows Permissions
+
+  On Windows, the `.openclaw\canvas` directory is typically created by `npm install -g openclaw`, which runs with admin privileges. This means normal user processes (including AI agents) **cannot write files there** — installs will silently fail or report false success.
+
+  **Fix 1 — Run installer as admin (recommended for first install):**
+
+  1. Right-click PowerShell and select **Run as Administrator**
+  2. Run the installer:
+  ```powershell
+  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/JoeSzeles/clawscript/main/install-node.cjs" -OutFile "$env:TEMP\cs-install.cjs"; node "$env:TEMP\cs-install.cjs"
+  ```
+
+  **Fix 2 — Grant your user write access (permanent fix):**
+  ```powershell
+  icacls "$env:USERPROFILE\.openclaw\canvas" /grant "$env:USERNAME:(OI)(CI)F"
+  ```
+  After this, future installs and agent updates won't need admin rights.
+
+  **How to tell if this is the problem:**
+  - Install script says "success" but editor URL returns 404
+  - `dir %USERPROFILE%\.openclaw\canvas\` only shows `index.html`, `manifest.json`, `nav-inject.js` (no ClawScript files)
+  - Agent confirms files exist but they don't load in browser
+
   ### Standalone usage (no OpenClaw)
 
   ```javascript
@@ -221,44 +261,7 @@ ENDIF
   const { js } = parseAndGenerate(code, 'MyRSI');
   // js contains a complete Node.js module exporting a BaseStrategy subclass
   ```
-  ## Project Structure
-
-```
-clawscript/
-  lib/
-    clawscript-parser.cjs    # Lexer, parser, AST builder, JS code generator
-    indicators.cjs            # 25+ technical indicators (EMA, RSI, MACD, etc.)
-    openclaw/                 # OpenClaw API wrapper stubs
-      openclaw-ai.cjs         #   AI queries and ML
-      openclaw-data.cjs       #   Web/PDF/video/image data fetch
-      openclaw-chat.cjs       #   Chat and session management
-      openclaw-tools.cjs      #   External tool execution
-      openclaw-channels.cjs   #   Channel/alert management
-      openclaw-nomad.cjs      #   Market scanning and allocation
-      openclaw-automation.cjs #   Task, cron, file, email, channel automation
-  editor/
-    ig-clawscript-ui.js       # Code editor with syntax highlighting
-    ig-clawscript-flow.js     # Visual flow builder (drag-drop node editor)
-  strategies/
-    base-strategy.cjs         # Base class all strategies extend
-    index.cjs                 # Auto-discovery strategy loader
-  templates/                  # 4 ready-to-use sample strategies
-    rsi-simple.cs
-    ema-crossover.cs
-    multi-indicator.cs
-    sentiment-scan.cs
-  examples/
-    custom-btctest-strategy.cjs  # Example compiled strategy
-  docs/
-    CLAWSCRIPT.md             # Full language reference (agent-readable)
-    clawscript-docs.html      # Interactive documentation page
-  screenshots/                # Editor and flow builder screenshots
-  test/
-    test-clawscript-parser.cjs  # 82-test suite
-    test-clawscript-pipeline.cjs # 139-test pipeline suite
-```
-
-## Command Reference
+  ## Command Reference
 
 ### Trading
 | Command | Description |
