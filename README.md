@@ -115,51 +115,113 @@ IF rsi > 70 THEN
 ENDIF
 ```
 
-## Installation
+## Installation / Update / Uninstall
 
-### Into an existing OpenClaw instance
+  ### Windows (PowerShell)
 
-```bash
-git clone https://github.com/JoeSzeles/clawscript.git
-cd clawscript
-bash install.sh
-```
+  **Install:**
+  ```powershell
+  git clone https://github.com/JoeSzeles/clawscript.git
+  cd clawscript
+  .\install.ps1
+  ```
 
-The installer copies files to the correct OpenClaw directories:
+  **Update to latest:**
+  ```powershell
+  cd clawscript
+  .\update.ps1
+  ```
 
-| What | Destination |
-|------|-------------|
-| Parser + indicators | `skills/bots/` |
-| OpenClaw wrappers | `skills/bots/` |
-| Strategy framework | `skills/bots/strategies/` |
-| Editor UI + flow builder | `.openclaw/canvas/` |
-| Templates | `.openclaw/canvas/clawscript-templates/` |
-| Documentation | `.openclaw/canvas/` + `skills/clawscript/` |
+  **Uninstall:**
+  ```powershell
+  cd clawscript
+  .\uninstall.ps1
+  ```
 
-Custom paths:
-```bash
-bash install.sh /path/to/.openclaw /path/to/skills
-```
+  ### Linux / macOS
 
-### Standalone usage (no OpenClaw)
+  **Install:**
+  ```bash
+  git clone https://github.com/JoeSzeles/clawscript.git
+  cd clawscript
+  bash install.sh
+  ```
 
-```javascript
-const { parseAndGenerate, parseToAST } = require('./lib/clawscript-parser.cjs');
+  **Update to latest:**
+  ```bash
+  cd clawscript
+  bash update.sh
+  ```
 
-// Parse to AST
-const ast = parseToAST(`
-  DEF rsi = RSI(14)
-  IF rsi < 30 THEN
-    BUY 1 AT MARKET STOP 20 REASON "dip buy"
-  ENDIF
-`);
+  **Uninstall:**
+  ```bash
+  cd clawscript
+  bash uninstall.sh
+  ```
 
-// Compile to JavaScript strategy class
-const { js } = parseAndGenerate(code, 'MyRSI');
-// js contains a complete Node.js module exporting a BaseStrategy subclass
-```
+  ### Android (Termux)
 
-## Project Structure
+  ```bash
+  pkg install git nodejs
+  git clone https://github.com/JoeSzeles/clawscript.git
+  cd clawscript
+  bash install.sh
+  # Update: bash update.sh
+  # Uninstall: bash uninstall.sh
+  ```
+
+  ### Custom paths
+
+  All scripts auto-detect OpenClaw install locations. To override:
+
+  ```powershell
+  # Windows
+  .\install.ps1 -OpenClawRoot "C:\Users\you\.openclaw" -SkillsRoot "C:\path\to\skills"
+  ```
+
+  ```bash
+  # Linux / macOS / Android
+  bash install.sh /path/to/.openclaw /path/to/skills
+  ```
+
+  ### Auto-detected paths
+
+  | Platform | OpenClaw Root | Skills |
+  |----------|--------------|--------|
+  | Windows (npm global) | `%USERPROFILE%\.openclaw` | `%APPDATA%\npm\node_modules\openclaw\skills` |
+  | Linux / macOS | `~/.openclaw` | `~/.openclaw/skills` or `./skills` |
+  | Android (Termux) | `~/.openclaw` | `~/.openclaw/skills` or `./skills` |
+
+  ### What gets installed
+
+  | What | Destination |
+  |------|-------------|
+  | Parser + indicators | `skills/bots/` |
+  | OpenClaw wrappers | `skills/bots/` |
+  | Strategy framework | `skills/bots/strategies/` |
+  | Editor UI + flow builder | `.openclaw/canvas/` |
+  | Standalone server | `.openclaw/serve-clawscript.cjs` |
+  | Templates | `.openclaw/canvas/clawscript-templates/` |
+  | Documentation | `.openclaw/canvas/` + `skills/clawscript/` |
+
+  ### Standalone usage (no OpenClaw)
+
+  ```javascript
+  const { parseAndGenerate, parseToAST } = require('./lib/clawscript-parser.cjs');
+
+  // Parse to AST
+  const ast = parseToAST(`
+    DEF rsi = RSI(14)
+    IF rsi < 30 THEN
+      BUY 1 AT MARKET STOP 20 REASON "dip buy"
+    ENDIF
+  `);
+
+  // Compile to JavaScript strategy class
+  const { js } = parseAndGenerate(code, 'MyRSI');
+  // js contains a complete Node.js module exporting a BaseStrategy subclass
+  ```
+  ## Project Structure
 
 ```
 clawscript/
