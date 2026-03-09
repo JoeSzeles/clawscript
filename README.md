@@ -6,9 +6,10 @@ A domain-specific language (DSL) for writing automated trading strategies in [Op
 
 ## Features
 
-- **80+ commands** across 16 categories: Trading, Variables, Control Flow, AI/Analysis, Data Fetch, Agent Orchestration, Advanced, Functions, TradingView-Style, Bloomberg/Data Access, Time/Schedule, Portfolio, Economic/Political, Scientific/Quantitative, Utility, and PRT Compatibility (40+ ProRealTime commands)
+- **100+ commands** across 18 categories: Trading, Variables, Control Flow, AI/Analysis, Data Fetch, Agent Orchestration, Advanced, Functions, TradingView-Style, Bloomberg/Data Access, Time/Schedule, Portfolio, Economic/Political, Scientific/Quantitative, Utility, PRT Compatibility (40+ ProRealTime commands), Notifications, and Agent Management
 - **21 Automation Commands** — define tasks, chain workflows, schedule cron jobs, send notifications via chat channels and email, read/write/execute files, and publish scripts — all from within `.cs` scripts
-- **Visual Flow Builder** — drag-and-drop node editor with bidirectional code-to-flow synchronization
+- **Notification Commands** — NOTIFY (browser notifications), TOAST (auto-dismiss overlays), POPUP (HTML modals), DISPLAY (formatted data tables/charts/JSON), TELEMETRY_START/LOG/STOP (real-time telemetry windows)
+- **Visual Flow Builder** — drag-and-drop node editor with bidirectional code-to-flow synchronization, 20+ categories including Indicators (5 sub-categories) and Notifications
 - **Operator Nodes** — round/circular operator nodes (Arithmetic, Comparison, Logical, Crossover, String) with multi-port I/O
 - **Flow Toolbar** — Connect mode, Delete, Select All, Zoom In/Out/Fit, Auto-Layout, Export PNG, Undo/Redo, Clear All
 - **Animated Flow Execution** — real-time node highlighting, glowing connection paths, live values on nodes, speed control (Fast/Normal/Slow/Step)
@@ -19,8 +20,10 @@ A domain-specific language (DSL) for writing automated trading strategies in [Op
 - **AI Assistant** — built-in chat panel with Bearer token auth, reads code/errors/logs to help fix issues
 - **Strategy Compiler** — compiles `.cs` scripts to production-ready `.cjs` strategy modules
 - **Save & Deploy Pipeline** — save dialog with strategy name/filename, auto-deploy to `strategies/` for bot engine discovery
-- **Run Live** — one-click deployment of compiled strategies as persistent background processes
-- **Simulation & Backtest** — test strategies with real or cached price data; green play button, instrument selector, multi-tier data fallback (API → DB cache → stream ticks → mock)
+- **Run Live** — config popup (name, instrument) then deploys as persistent background process with live log viewer, stop/restart/pause controls
+- **Backtest** — config popup (timeframe, candle count, instrument) with progress indicator, results popup with equity curve canvas and trade list
+- **Simulation & Backtest** — test strategies with real or cached price data; green play button, instrument selector, multi-tier data fallback (API → DB cache → stream ticks → demo data)
+- **Indicator Dropdown** — toolbar selector with all 25+ indicators organized by category (Trend, Oscillators, Volatility, Volume), inserts code at cursor, favorites saved to localStorage
 - **AI Integration** — query AI models, generate scripts, analyze logs, and scan sentiment
 - **Agent Orchestration** — spawn agents, manage sessions, mutate configs at runtime
 - **30+ Technical Indicators** — RSI, EMA, SMA, MACD, Bollinger Bands (Upper/Lower), ATR, ADX, Stochastic (K/D), CCI, Williams %R, ROC, Aroon, Ichimoku, Parabolic SAR, Keltner, Donchian, OBV, VWAP, CMF, ZScore, Supertrend, and more
@@ -115,153 +118,88 @@ IF rsi > 70 THEN
 ENDIF
 ```
 
-## Installation / Update / Uninstall
+## Installation
 
-  > **Windows permissions:** The `.openclaw\canvas` directory is often created by the OpenClaw npm installer with admin privileges. If your AI agent or scripts report "success" but files don't appear, it's a permissions issue. See [Troubleshooting: Windows Permissions](#troubleshooting-windows-permissions) below.
+### Into an existing OpenClaw instance
 
-  ### Quick Install (any OS, just needs Node.js)
+```bash
+git clone https://github.com/JoeSzeles/clawscript.git
+cd clawscript
+bash install.sh
+```
 
-  The simplest method — downloads files directly from GitHub, no git needed:
+The installer copies files to the correct OpenClaw directories:
 
-  ```bash
-  # Download and run (works in PowerShell, bash, or Termux)
-  curl -o install-node.cjs https://raw.githubusercontent.com/JoeSzeles/clawscript/main/install-node.cjs
-  node install-node.cjs
-  ```
+| What | Destination |
+|------|-------------|
+| Parser + indicators | `skills/bots/` |
+| OpenClaw wrappers | `skills/bots/` |
+| Strategy framework | `skills/bots/strategies/` |
+| Editor UI + flow builder | `.openclaw/canvas/` |
+| Templates | `.openclaw/canvas/clawscript-templates/` |
+| Documentation | `.openclaw/canvas/` + `skills/clawscript/` |
 
-  On Windows PowerShell:
-  ```powershell
-  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/JoeSzeles/clawscript/main/install-node.cjs" -OutFile install-node.cjs; node install-node.cjs
-  ```
+Custom paths:
+```bash
+bash install.sh /path/to/.openclaw /path/to/skills
+```
 
-  ### Windows (PowerShell)
+### Standalone usage (no OpenClaw)
 
-  **Install:**
-  ```powershell
-  git clone https://github.com/JoeSzeles/clawscript.git
-  cd clawscript
-  .\install.ps1
-  ```
+```javascript
+const { parseAndGenerate, parseToAST } = require('./lib/clawscript-parser.cjs');
 
-  **Update to latest:**
-  ```powershell
-  cd clawscript
-  .\update.ps1
-  ```
+// Parse to AST
+const ast = parseToAST(`
+  DEF rsi = RSI(14)
+  IF rsi < 30 THEN
+    BUY 1 AT MARKET STOP 20 REASON "dip buy"
+  ENDIF
+`);
 
-  **Uninstall:**
-  ```powershell
-  cd clawscript
-  .\uninstall.ps1
-  ```
+// Compile to JavaScript strategy class
+const { js } = parseAndGenerate(code, 'MyRSI');
+// js contains a complete Node.js module exporting a BaseStrategy subclass
+```
 
-  ### Linux / macOS
+## Project Structure
 
-  **Install:**
-  ```bash
-  git clone https://github.com/JoeSzeles/clawscript.git
-  cd clawscript
-  bash install.sh
-  ```
+```
+clawscript/
+  lib/
+    clawscript-parser.cjs    # Lexer, parser, AST builder, JS code generator
+    indicators.cjs            # 25+ technical indicators (EMA, RSI, MACD, etc.)
+    openclaw/                 # OpenClaw API wrapper stubs
+      openclaw-ai.cjs         #   AI queries and ML
+      openclaw-data.cjs       #   Web/PDF/video/image data fetch
+      openclaw-chat.cjs       #   Chat and session management
+      openclaw-tools.cjs      #   External tool execution
+      openclaw-channels.cjs   #   Channel/alert management
+      openclaw-nomad.cjs      #   Market scanning and allocation
+      openclaw-automation.cjs #   Task, cron, file, email, channel automation
+  editor/
+    ig-clawscript-ui.js       # Code editor with syntax highlighting
+    ig-clawscript-flow.js     # Visual flow builder (drag-drop node editor)
+  strategies/
+    base-strategy.cjs         # Base class all strategies extend
+    index.cjs                 # Auto-discovery strategy loader
+  templates/                  # 4 ready-to-use sample strategies
+    rsi-simple.cs
+    ema-crossover.cs
+    multi-indicator.cs
+    sentiment-scan.cs
+  examples/
+    custom-btctest-strategy.cjs  # Example compiled strategy
+  docs/
+    CLAWSCRIPT.md             # Full language reference (agent-readable)
+    clawscript-docs.html      # Interactive documentation page
+  screenshots/                # Editor and flow builder screenshots
+  test/
+    test-clawscript-parser.cjs  # 82-test suite
+    test-clawscript-pipeline.cjs # 139-test pipeline suite
+```
 
-  **Update to latest:**
-  ```bash
-  cd clawscript
-  bash update.sh
-  ```
-
-  **Uninstall:**
-  ```bash
-  cd clawscript
-  bash uninstall.sh
-  ```
-
-  ### Android (Termux)
-
-  ```bash
-  pkg install git nodejs
-  git clone https://github.com/JoeSzeles/clawscript.git
-  cd clawscript
-  bash install.sh
-  # Update: bash update.sh
-  # Uninstall: bash uninstall.sh
-  ```
-
-  ### Custom paths
-
-  All scripts auto-detect OpenClaw install locations. To override:
-
-  ```powershell
-  # Windows
-  .\install.ps1 -OpenClawRoot "C:\Users\you\.openclaw" -SkillsRoot "C:\path\to\skills"
-  ```
-
-  ```bash
-  # Linux / macOS / Android
-  bash install.sh /path/to/.openclaw /path/to/skills
-  ```
-
-  ### Auto-detected paths
-
-  | Platform | OpenClaw Root | Skills |
-  |----------|--------------|--------|
-  | Windows (npm global) | `%USERPROFILE%\.openclaw` | `%APPDATA%\npm\node_modules\openclaw\skills` |
-  | Linux / macOS | `~/.openclaw` | `~/.openclaw/skills` or `./skills` |
-  | Android (Termux) | `~/.openclaw` | `~/.openclaw/skills` or `./skills` |
-
-  ### What gets installed
-
-  | What | Destination |
-  |------|-------------|
-  | Parser + indicators | `skills/bots/` |
-  | OpenClaw wrappers | `skills/bots/` |
-  | Strategy framework | `skills/bots/strategies/` |
-  | Editor UI + flow builder | `.openclaw/canvas/` |
-  | Standalone server | `.openclaw/serve-clawscript.cjs` |
-  | Templates | `.openclaw/canvas/clawscript-templates/` |
-  | Documentation | `.openclaw/canvas/` + `skills/clawscript/` |
-
-  ### Troubleshooting: Windows Permissions
-
-  On Windows, the `.openclaw\canvas` directory is typically created by `npm install -g openclaw`, which runs with admin privileges. This means normal user processes (including AI agents) **cannot write files there** — installs will silently fail or report false success.
-
-  **Fix 1 — Run installer as admin (recommended for first install):**
-
-  1. Right-click PowerShell and select **Run as Administrator**
-  2. Run the installer:
-  ```powershell
-  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/JoeSzeles/clawscript/main/install-node.cjs" -OutFile "$env:TEMP\cs-install.cjs"; node "$env:TEMP\cs-install.cjs"
-  ```
-
-  **Fix 2 — Grant your user write access (permanent fix):**
-  ```powershell
-  icacls "$env:USERPROFILE\.openclaw\canvas" /grant "$env:USERNAME:(OI)(CI)F"
-  ```
-  After this, future installs and agent updates won't need admin rights.
-
-  **How to tell if this is the problem:**
-  - Install script says "success" but editor URL returns 404
-  - `dir %USERPROFILE%\.openclaw\canvas\` only shows `index.html`, `manifest.json`, `nav-inject.js` (no ClawScript files)
-  - Agent confirms files exist but they don't load in browser
-
-  ### Standalone usage (no OpenClaw)
-
-  ```javascript
-  const { parseAndGenerate, parseToAST } = require('./lib/clawscript-parser.cjs');
-
-  // Parse to AST
-  const ast = parseToAST(`
-    DEF rsi = RSI(14)
-    IF rsi < 30 THEN
-      BUY 1 AT MARKET STOP 20 REASON "dip buy"
-    ENDIF
-  `);
-
-  // Compile to JavaScript strategy class
-  const { js } = parseAndGenerate(code, 'MyRSI');
-  // js contains a complete Node.js module exporting a BaseStrategy subclass
-  ```
-  ## Command Reference
+## Command Reference
 
 ### Trading
 | Command | Description |
