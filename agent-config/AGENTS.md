@@ -3,7 +3,7 @@
 ## BANNED — DO NOT USE
 - **localhost:5000 is BANNED** — `web_fetch` blocks localhost (SSRF protection). Do NOT attempt API calls to localhost.
 - **Do NOT scrape HTML canvas pages** — they are JavaScript-rendered shells that show "Loading..." when fetched statically. Use the JSON endpoints instead.
-- **NEVER mention localhost or 127.0.0.1** to the user. Use the public URL: `https://openclaw-mechanicus.replit.app/`
+- **NEVER mention localhost or 127.0.0.1** to the user. Use the public URL: `https://YOUR ADDRESS HERE/`
 
 ## How to Access IG Dashboard Data
 
@@ -11,23 +11,23 @@
 Use `web_fetch` with these URLs:
 
 ### Live Dashboard State (updated every 30s)
-- **`https://openclaw-mechanicus.replit.app/__openclaw__/canvas/ig-dashboard-snapshot.json`**
+- **`https://YOUR ADDRESS HERE/__openclaw__/canvas/ig-dashboard-snapshot.json`**
   Contains: account balance, available cash, P&L, margin, equity, live prices (bid/offer/mid per instrument), scalper status (running, P&L, win rate, open positions, strategies), streaming method. This is your PRIMARY data source.
 
 ### Trade History
-- **`https://openclaw-mechanicus.replit.app/__openclaw__/canvas/all-scalper-trades-data.json`**
+- **`https://YOUR ADDRESS HERE/__openclaw__/canvas/all-scalper-trades-data.json`**
   Contains: Full array of all scalper trades (open/close events with epic, direction, size, entry, exit, P&L, timestamps)
 
 ### Configuration & Alerts
-- **`https://openclaw-mechanicus.replit.app/__openclaw__/canvas/ig-scalper-config-snapshot.json`** — Scalper config snapshot (from PostgreSQL database — budget, strategies with per-strategy settings, indicators, risk settings)
-- **`https://openclaw-mechanicus.replit.app/__openclaw__/canvas/ig-alerts-snapshot.json`** — Signal monitor alerts (reversals, spikes)
-- **`https://openclaw-mechanicus.replit.app/__openclaw__/canvas/ig-bot-log-snapshot.json`** — Bot activity log
-- **`https://openclaw-mechanicus.replit.app/__openclaw__/canvas/ig-strategy-snapshot.json`** — Strategy config
-- **`https://openclaw-mechanicus.replit.app/__openclaw__/canvas/ig-monitor-config-snapshot.json`** — Monitor config
+- **`https://YOUR ADDRESS HERE/__openclaw__/canvas/ig-scalper-config-snapshot.json`** — Scalper config snapshot (from PostgreSQL database — budget, strategies with per-strategy settings, indicators, risk settings)
+- **`https://YOUR ADDRESS HERE/__openclaw__/canvas/ig-alerts-snapshot.json`** — Signal monitor alerts (reversals, spikes)
+- **`https://YOUR ADDRESS HERE/__openclaw__/canvas/ig-bot-log-snapshot.json`** — Bot activity log
+- **`https://YOUR ADDRESS HERE/__openclaw__/canvas/ig-strategy-snapshot.json`** — Strategy config
+- **`https://YOUR ADDRESS HERE/__openclaw__/canvas/ig-monitor-config-snapshot.json`** — Monitor config
 
 ### Example: Get account balance + scalper status
 ```
-web_fetch https://openclaw-mechanicus.replit.app/__openclaw__/canvas/ig-dashboard-snapshot.json
+web_fetch https://YOUR ADDRESS HERE/__openclaw__/canvas/ig-dashboard-snapshot.json
 ```
 Response contains:
 ```json
@@ -41,14 +41,14 @@ Response contains:
 
 ### Example: Get all trade history
 ```
-web_fetch https://openclaw-mechanicus.replit.app/__openclaw__/canvas/all-scalper-trades-data.json
+web_fetch https://YOUR ADDRESS HERE/__openclaw__/canvas/all-scalper-trades-data.json
 ```
 
 ## Config Write API (API KEY REQUIRED FOR WRITES)
 
 **Agents can READ configs freely and WRITE configs with the `CANVAS_API_KEY`.**
 
-Base URL: `https://openclaw-mechanicus.replit.app/__openclaw__/canvas/api/`
+Base URL: `https://YOUR ADDRESS HERE/__openclaw__/canvas/api/`
 
 ### Authentication for Writes
 All write endpoints (POST/PUT) require the `CANVAS_API_KEY` secret. GET requests are public (no key needed).
@@ -100,36 +100,36 @@ UPDATE scalper_strategies SET cooldown_ms = 8000 WHERE id = 1;
 ```
 curl -X PUT -H "Content-Type: application/json" -H "X-Api-Key: $CANVAS_API_KEY" \
   -d '{"budget": 10000, "maxDrawdown": 500}' \
-  https://openclaw-mechanicus.replit.app/api/ig/scalper
+  https://YOUR ADDRESS HERE/api/ig/scalper
 ```
 
 ### Example: Update a strategy's settings
 ```
 curl -X PUT -H "Content-Type: application/json" -H "X-Api-Key: $CANVAS_API_KEY" \
   -d '{"cooldownMs": 8000, "profitTarget": 50, "rsiEnabled": true}' \
-  https://openclaw-mechanicus.replit.app/api/ig/scalper/strategies/1
+  https://YOUR ADDRESS HERE/api/ig/scalper/strategies/1
 ```
 
 ### Example: Stop the scalper
 ```
-curl -X POST -H "X-Api-Key: $CANVAS_API_KEY" https://openclaw-mechanicus.replit.app/__openclaw__/canvas/api/scalper/stop
+curl -X POST -H "X-Api-Key: $CANVAS_API_KEY" https://YOUR ADDRESS HERE/__openclaw__/canvas/api/scalper/stop
 ```
 
 ### Example: Run a backtest for a strategy
 ```
 curl -X POST -H "Content-Type: application/json" -H "X-Api-Key: $CANVAS_API_KEY" \
   -d '{"timeframe": "MINUTE", "candleCount": 500}' \
-  https://openclaw-mechanicus.replit.app/api/ig/scalper/strategies/1/backtest
+  https://YOUR ADDRESS HERE/api/ig/scalper/strategies/1/backtest
 ```
 
 ### Example: Get backtest history for a strategy
 ```
-web_fetch https://openclaw-mechanicus.replit.app/api/ig/scalper/strategies/1/backtests
+web_fetch https://YOUR ADDRESS HERE/api/ig/scalper/strategies/1/backtests
 ```
 
 ### Example: Get backtest detail
 ```
-web_fetch https://openclaw-mechanicus.replit.app/api/ig/scalper/backtests/1
+web_fetch https://YOUR ADDRESS HERE/api/ig/scalper/backtests/1
 ```
 
 ### Example: Query backtest results from DB
@@ -149,7 +149,7 @@ When asked to optimize bot variables or analyze performance:
 7. **Announce**: Report findings to the user
 
 ## Communication Rules
-- **ALWAYS** use the public URL: `https://openclaw-mechanicus.replit.app/`
+- **ALWAYS** use the public URL: `https://YOUR ADDRESS HERE/`
 - **YOU ARE ONLINE**: You have real-time access via the canvas JSON endpoints above
 - Data refreshes every 30 seconds automatically
 
@@ -433,7 +433,7 @@ Use `sessions_spawn` to delegate ClawScript tasks to specialized subagents. Alwa
 **Coder subagent** — writes new strategies:
 ```
 sessions_spawn({
-  task: "Write a ClawScript strategy for [INSTRUMENT]. Requirements: [DETAILS].\n\nREAD FIRST:\n1. skills/clawscript/CLAWSCRIPT.md\n2. skills/clawscript/TRADING-BOT-RULEBOOK.md\n3. skills/clawscript/CLAWSCRIPT-AI-REFERENCE.md\n\nMANDATORY: Use DEF (not VAR/LET/CONST), AND/OR/NOT (not &&/||), indicators with prices first arg, null-check all indicators, BUY/SELL inside IF, define INPUT_INT stopDistance + limitDistance. MACD returns single number. prices is a variable (never PRICES()). No THEN after IF. After writing, compile via: web_fetch POST https://openclaw-mechanicus.replit.app/api/clawscript/compile with {\"code\": \"...\"} and fix any errors.",
+  task: "Write a ClawScript strategy for [INSTRUMENT]. Requirements: [DETAILS].\n\nREAD FIRST:\n1. skills/clawscript/CLAWSCRIPT.md\n2. skills/clawscript/TRADING-BOT-RULEBOOK.md\n3. skills/clawscript/CLAWSCRIPT-AI-REFERENCE.md\n\nMANDATORY: Use DEF (not VAR/LET/CONST), AND/OR/NOT (not &&/||), indicators with prices first arg, null-check all indicators, BUY/SELL inside IF, define INPUT_INT stopDistance + limitDistance. MACD returns single number. prices is a variable (never PRICES()). No THEN after IF. After writing, compile via: web_fetch POST https://YOUR ADDRESS HERE/api/clawscript/compile with {\"code\": \"...\"} and fix any errors.",
   label: "clawscript-coder"
 })
 ```
@@ -441,7 +441,7 @@ sessions_spawn({
 **Proofreader subagent** — reviews and fixes existing code:
 ```
 sessions_spawn({
-  task: "Proofread and fix this ClawScript code. READ skills/clawscript/TRADING-BOT-RULEBOOK.md first.\n\nCode:\n[CODE]\n\nCHECKLIST:\n1. DEF not VAR/LET/CONST\n2. AND/OR/NOT not &&/||/!\n3. No THEN after IF\n4. Indicators have prices first arg\n5. Null checks on all indicators\n6. BUY/SELL inside IF\n7. stopDistance + limitDistance defined\n8. limitDistance >= stopDistance\n9. No banned syntax (PRICES(), BB(), macd.line, ?., ??)\n10. IF/ENDIF matched\n11. Compile test via web_fetch POST https://openclaw-mechanicus.replit.app/api/clawscript/compile\n\nReturn: fixed code + issues list.",
+  task: "Proofread and fix this ClawScript code. READ skills/clawscript/TRADING-BOT-RULEBOOK.md first.\n\nCode:\n[CODE]\n\nCHECKLIST:\n1. DEF not VAR/LET/CONST\n2. AND/OR/NOT not &&/||/!\n3. No THEN after IF\n4. Indicators have prices first arg\n5. Null checks on all indicators\n6. BUY/SELL inside IF\n7. stopDistance + limitDistance defined\n8. limitDistance >= stopDistance\n9. No banned syntax (PRICES(), BB(), macd.line, ?., ??)\n10. IF/ENDIF matched\n11. Compile test via web_fetch POST https://YOUR ADDRESS HERE/api/clawscript/compile\n\nReturn: fixed code + issues list.",
   label: "clawscript-proofreader"
 })
 ```
@@ -449,7 +449,7 @@ sessions_spawn({
 **Backtester subagent** — runs backtests and analyzes results:
 ```
 sessions_spawn({
-  task: "Backtest this ClawScript strategy against [INSTRUMENT] with [TIMEFRAME] and [CANDLE_COUNT] candles.\n\nCode:\n[CODE]\n\nUse: web_fetch POST https://openclaw-mechanicus.replit.app/api/clawscript/backtest with {\"code\": \"...\", \"instrument\": \"...\", \"resolution\": \"...\", \"candleCount\": N}\n\nAnalyze: total P&L, win rate, max drawdown, Sharpe ratio, number of trades. If 0 trades, suggest threshold adjustments.",
+  task: "Backtest this ClawScript strategy against [INSTRUMENT] with [TIMEFRAME] and [CANDLE_COUNT] candles.\n\nCode:\n[CODE]\n\nUse: web_fetch POST https://YOUR ADDRESS HERE/api/clawscript/backtest with {\"code\": \"...\", \"instrument\": \"...\", \"resolution\": \"...\", \"candleCount\": N}\n\nAnalyze: total P&L, win rate, max drawdown, Sharpe ratio, number of trades. If 0 trades, suggest threshold adjustments.",
   label: "clawscript-backtester"
 })
 ```
