@@ -1775,6 +1775,42 @@ FlowEngine.prototype.addNodeFromAST = function(stmt) {
       node.params.name = stmt.name || '';
       node.params.args = (stmt.params || []).join(', ');
       break;
+    case 'BrainBoot':
+      if (stmt.sensory) node.params.sensory = this.exprToStr(stmt.sensory);
+      if (stmt.inter) node.params.inter = this.exprToStr(stmt.inter);
+      if (stmt.motor) node.params.motor = this.exprToStr(stmt.motor);
+      if (stmt.preset) node.params.preset = this.exprToStr(stmt.preset);
+      break;
+    case 'BrainStimulate':
+      if (stmt.inputs) node.params.inputs = this.exprToStr(stmt.inputs);
+      break;
+    case 'BrainFeedback':
+      if (stmt.feedbackType) node.params.feedbackType = this.exprToStr(stmt.feedbackType);
+      if (stmt.data) node.params.data = this.exprToStr(stmt.data);
+      break;
+    case 'BrainTrain':
+      if (stmt.enabled) node.params.state = this.exprToStr(stmt.enabled);
+      if (stmt.direction) node.params.direction = this.exprToStr(stmt.direction);
+      break;
+    case 'BrainCreate':
+      if (stmt.name) node.params.name = this.exprToStr(stmt.name);
+      if (stmt.sensory) node.params.sensory = this.exprToStr(stmt.sensory);
+      if (stmt.inter) node.params.inter = this.exprToStr(stmt.inter);
+      if (stmt.motor) node.params.motor = this.exprToStr(stmt.motor);
+      break;
+    case 'BrainUse':
+      if (stmt.name) node.params.name = this.exprToStr(stmt.name);
+      break;
+    case 'BrainDestroy':
+      if (stmt.name) node.params.name = this.exprToStr(stmt.name);
+      node.params.deleteWeights = stmt.deleteWeights ? 'true' : 'false';
+      break;
+    case 'BrainStatus':
+    case 'BrainObserve':
+    case 'BrainSave':
+    case 'BrainLoad':
+    case 'BrainList':
+      break;
   }
   return id;
 };
@@ -1843,7 +1879,19 @@ FlowEngine.prototype.astTypeToCmd = function(stmt) {
     'DataTransform': function() { return 'DATA_TRANSFORM'; },
     'ChannelSend': function() { return 'CHANNEL_SEND'; },
     'EmailSend': function() { return 'EMAIL_SEND'; },
-    'PublishCanvas': function() { return 'PUBLISH_CANVAS'; }
+    'PublishCanvas': function() { return 'PUBLISH_CANVAS'; },
+    'BrainBoot': function() { return 'BRAIN_BOOT'; },
+    'BrainStatus': function() { return 'BRAIN_STATUS'; },
+    'BrainStimulate': function() { return 'BRAIN_STIMULATE'; },
+    'BrainObserve': function() { return 'BRAIN_OBSERVE'; },
+    'BrainFeedback': function() { return 'BRAIN_FEEDBACK'; },
+    'BrainTrain': function() { return 'BRAIN_TRAIN'; },
+    'BrainSave': function() { return 'BRAIN_SAVE'; },
+    'BrainLoad': function() { return 'BRAIN_LOAD'; },
+    'BrainCreate': function() { return 'BRAIN_CREATE'; },
+    'BrainUse': function() { return 'BRAIN_USE'; },
+    'BrainList': function() { return 'BRAIN_LIST'; },
+    'BrainDestroy': function() { return 'BRAIN_DESTROY'; }
   };
   var fn = map[stmt.type];
   return fn ? fn(stmt) : 'WAIT';
@@ -2079,6 +2127,34 @@ FlowEngine.prototype.nodeToLine = function(node) {
     case 'CHANNEL_SEND': return 'CHANNEL_SEND "' + (p.channel || '') + '" "' + (p.message || '') + '"';
     case 'EMAIL_SEND': return 'EMAIL_SEND "' + (p.to || '') + '" "' + (p.body || '') + '"' + (p.subject ? ' SUBJECT "' + p.subject + '"' : '');
     case 'PUBLISH_CANVAS': return 'PUBLISH_CANVAS "' + (p.canvas || '') + '"' + (p.content ? ' CONTENT "' + p.content + '"' : '');
+    case 'BRAIN_BOOT':
+      var bb = 'BRAIN_BOOT';
+      if (p.sensory) bb += ' SENSORY ' + p.sensory;
+      if (p.inter) bb += ' INTER ' + p.inter;
+      if (p.motor) bb += ' MOTOR ' + p.motor;
+      if (p.preset) bb += ' PRESET "' + p.preset + '"';
+      return bb;
+    case 'BRAIN_STATUS': return 'BRAIN_STATUS';
+    case 'BRAIN_STIMULATE': return 'BRAIN_STIMULATE ' + (p.inputs || 'data');
+    case 'BRAIN_OBSERVE': return 'BRAIN_OBSERVE';
+    case 'BRAIN_FEEDBACK': return 'BRAIN_FEEDBACK "' + (p.feedbackType || 'reward') + '"' + (p.data ? ' ' + p.data : '');
+    case 'BRAIN_TRAIN':
+      var bt = 'BRAIN_TRAIN';
+      if (p.state === 'true') bt += ' ON';
+      else if (p.state === 'false') bt += ' OFF';
+      if (p.direction) bt += ' DIRECTION ' + p.direction;
+      return bt;
+    case 'BRAIN_SAVE': return 'BRAIN_SAVE';
+    case 'BRAIN_LOAD': return 'BRAIN_LOAD';
+    case 'BRAIN_CREATE':
+      var bc = 'BRAIN_CREATE "' + (p.name || '') + '"';
+      if (p.sensory) bc += ' SENSORY ' + p.sensory;
+      if (p.inter) bc += ' INTER ' + p.inter;
+      if (p.motor) bc += ' MOTOR ' + p.motor;
+      return bc;
+    case 'BRAIN_USE': return 'BRAIN_USE "' + (p.name || 'default') + '"';
+    case 'BRAIN_LIST': return 'BRAIN_LIST';
+    case 'BRAIN_DESTROY': return 'BRAIN_DESTROY "' + (p.name || '') + '"' + (p.deleteWeights === 'true' ? ' DELETE_WEIGHTS' : '');
     case 'NOTIFY':
       var ntf = 'NOTIFY "' + (p.message || '') + '"';
       if (p.level && p.level !== 'info') ntf += ' LEVEL "' + p.level + '"';
