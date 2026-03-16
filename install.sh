@@ -125,6 +125,8 @@ mkdir -p "$BOTS_DIR" "$STRATS_DIR" "$CANVAS_DIR" "$TEMPLATES_DIR" "$CLAWSKILL_DI
 
 echo "  [1/7] Parser & libraries"
 safe_cp "$SCRIPT_DIR/lib/clawscript-parser.cjs" "$BOTS_DIR/clawscript-parser.cjs" "clawscript-parser.cjs"
+safe_cp "$SCRIPT_DIR/lib/clawscript-brain.cjs" "$BOTS_DIR/clawscript-brain.cjs" "clawscript-brain.cjs"
+safe_cp "$SCRIPT_DIR/lib/clawscript-runner.cjs" "$BOTS_DIR/clawscript-runner.cjs" "clawscript-runner.cjs"
 safe_cp "$SCRIPT_DIR/lib/indicators.cjs" "$BOTS_DIR/indicators.cjs" "indicators.cjs"
 safe_cp "$SCRIPT_DIR/lib/clawscript-ai-handler.cjs" "$BOTS_DIR/clawscript-ai-handler.cjs" "clawscript-ai-handler.cjs"
 

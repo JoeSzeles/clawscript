@@ -1,37 +1,38 @@
 # ClawScript
 
-A domain-specific language (DSL) for writing automated trading strategies in [OpenClaw](https://github.com/openclaw). Write strategies in simple, readable commands — ClawScript compiles them to JavaScript classes that run inside the Trade Claw Engine.
+A general-purpose domain-specific language (DSL) for automation, AI agent orchestration, neural computing, and application scripting in [OpenClaw](https://github.com/openclaw). Write readable commands that compile to JavaScript — from workflow automation and agent management to neural network control, data processing, and trading strategies.
 
 ![ClawScript Editor — Code + Flow Builder + AI Assistant](screenshots/clawscript-full-editor.png)
 
 ## Features
 
-- **100+ commands** across 18 categories: Trading, Variables, Control Flow, AI/Analysis, Data Fetch, Agent Orchestration, Advanced, Functions, TradingView-Style, Bloomberg/Data Access, Time/Schedule, Portfolio, Economic/Political, Scientific/Quantitative, Utility, PRT Compatibility (40+ ProRealTime commands), Notifications, and Agent Management
-- **21 Automation Commands** — define tasks, chain workflows, schedule cron jobs, send notifications via chat channels and email, read/write/execute files, and publish scripts — all from within `.cs` scripts
+- **120+ commands** across 20+ categories: Variables, Control Flow, AI/Analysis, Brain/Neural, Data Fetch, Agent Orchestration, Task Planning, Communication, Notifications, File & Data, Time/Schedule, Scientific, Functions, Trading, Portfolio, Economic/Political, TradingView-Style, Bloomberg/Data Access, PRT Compatibility (40+ ProRealTime commands), and more
+- **Brain / Neural commands** — boot, stimulate, observe, and train spiking neural networks; create custom named brain instances with configurable neuron architectures; save and load brain weights; switch between multiple brains in scripts
+- **21 Automation Commands** — define tasks, chain workflows, schedule cron jobs, send notifications via chat channels and email, read/write/execute files, and publish scripts
 - **Notification Commands** — NOTIFY (browser notifications), TOAST (auto-dismiss overlays), POPUP (HTML modals), DISPLAY (formatted data tables/charts/JSON), TELEMETRY_START/LOG/STOP (real-time telemetry windows)
 - **Visual Flow Builder** — drag-and-drop node editor with bidirectional code-to-flow synchronization, 20+ categories including Indicators (5 sub-categories) and Notifications
 - **Operator Nodes** — round/circular operator nodes (Arithmetic, Comparison, Logical, Crossover, String) with multi-port I/O
 - **Flow Toolbar** — Connect mode, Delete, Select All, Zoom In/Out/Fit, Auto-Layout, Export PNG, Undo/Redo, Clear All
 - **Animated Flow Execution** — real-time node highlighting, glowing connection paths, live values on nodes, speed control (Fast/Normal/Slow/Step)
-- **Command Info Icons** — ⓘ icons in sidebar showing floating documentation cards per command
+- **Command Info Icons** — info icons in sidebar showing floating documentation cards per command
 - **Visual Output Popup** — draggable results modal with Simulation, Backtest, and Flow Trace tabs; equity curve canvas
 - **Code Editor** — syntax-highlighted editor with live parsing, VS Code-style error highlighting with dynamic line height
 - **Standalone Editor Page** — full editor accessible via "Code" link in top navigation bar
 - **AI Assistant** — built-in chat panel with Bearer token auth, reads code/errors/logs to help fix issues
-- **Strategy Compiler** — compiles `.cs` scripts to production-ready `.cjs` strategy modules
-- **Save & Deploy Pipeline** — save dialog with strategy name/filename, auto-deploy to `strategies/` for bot engine discovery
+- **Strategy Compiler** — compiles `.cs` scripts to production-ready `.cjs` modules
+- **Save & Deploy Pipeline** — save dialog with strategy name/filename, auto-deploy for engine discovery
 - **Run Live** — config popup (name, instrument) then deploys as persistent background process with live log viewer, stop/restart/pause controls
 - **Backtest** — config popup (timeframe, candle count, instrument) with progress indicator, results popup with equity curve canvas and trade list
-- **Simulation & Backtest** — test strategies with real or cached price data; green play button, instrument selector, multi-tier data fallback (API → DB cache → stream ticks → demo data)
-- **Indicator Dropdown** — toolbar selector with all 25+ indicators organized by category (Trend, Oscillators, Volatility, Volume), inserts code at cursor, favorites saved to localStorage
+- **Simulation & Backtest** — test strategies with real or cached data; green play button, instrument selector, multi-tier data fallback (API, DB cache, stream ticks, demo data)
+- **Indicator Dropdown** — toolbar selector with 25+ indicators organized by category (Trend, Oscillators, Volatility, Volume), inserts code at cursor, favorites saved to localStorage
 - **AI Integration** — query AI models, generate scripts, analyze logs, and scan sentiment
 - **Agent Orchestration** — spawn agents, manage sessions, mutate configs at runtime
-- **30+ Technical Indicators** — RSI, EMA, SMA, MACD, Bollinger Bands (Upper/Lower), ATR, ADX, Stochastic (K/D), CCI, Williams %R, ROC, Aroon, Ichimoku, Parabolic SAR, Keltner, Donchian, OBV, VWAP, CMF, ZScore, Supertrend, and more
+- **30+ Technical Indicators** — RSI, EMA, SMA, MACD, Bollinger Bands, ATR, ADX, Stochastic, CCI, Williams %R, ROC, Aroon, Ichimoku, Parabolic SAR, Keltner, Donchian, OBV, VWAP, CMF, ZScore, Supertrend, and more
 - **Variable Tooltips** — `INPUT_*` declarations and `DEF` comments become editable fields and tooltips in bot dashboard
-- **PRT Compatibility** — 40+ ProRealTime ProBuilder commands (PRT_RSI, PRT_MACD, PRT_BOLLINGER, PRT_ICHIMOKU, etc.)
+- **PRT Compatibility** — 40+ ProRealTime ProBuilder commands
 - **Export** — `.cs` source, `.json` AST, `.js` compiled output, `.png` flow diagram
 - **Single-Source Sync** — `sync-clawscript.sh` script keeps installer in sync with canonical sources
-- **221 tests** — 82 parser tests + 139 pipeline tests, 100% pass rate
+- **221 tests** — 82 parser + 139 pipeline tests, 100% pass rate
 
 ## Screenshots
 
@@ -43,70 +44,72 @@ The editor combines a syntax-highlighted code pane (left), a visual flow builder
 ### Visual Flow Builder
 ![Flow builder with drag-and-drop nodes and operator connections](screenshots/clawscript-flow-builder.png)
 
-The flow view renders ClawScript as a directed graph. Rectangular nodes represent commands (trading, variables, control flow), circular nodes represent operators (AND, OR, comparisons, crossovers). The Commands sidebar organizes all 100+ blocks into collapsible categories.
+The flow view renders ClawScript as a directed graph. Rectangular nodes represent commands (trading, variables, control flow), circular nodes represent operators (AND, OR, comparisons, crossovers). The Commands sidebar organizes all blocks into collapsible categories.
 
 ### Simulation Output
 ![Simulation running with parsed statements and indicator values](screenshots/clawscript-simulation.png)
 
-Real-time simulation output showing parsed statement count, data fetching with automatic fallback (API → mock data), and live indicator computation (EMA, RSI, MACD).
-
-## OpenClaw Automation
-
-ClawScript v1.1.0 introduces 21 automation commands via the `openclaw-automation` module. These commands let scripts define reusable tasks, chain workflows, schedule recurring jobs, and send notifications — turning ClawScript from a strategy language into a full workflow automation DSL.
-
-### Automation Commands
-
-| Command | Description |
-|---------|-------------|
-| `TASK_DEFINE` | Define a named task with a body — `TASK_DEFINE <name> ... ENDTASK` |
-| `TASK_ASSIGN` | Assign a task to an agent — `TASK_ASSIGN <task> <agent>` |
-| `TASK_CHAIN` | Run tasks in sequence — `TASK_CHAIN <task1> <task2> [...]` |
-| `TASK_PARALLEL` | Run tasks concurrently — `TASK_PARALLEL <task1> <task2> [...]` |
-| `TASK_SCHEDULE` | Schedule recurring task — `TASK_SCHEDULE <task> <cron>` |
-| `TASK_LOG` | Log from within a task — `TASK_LOG <message>` |
-| `TASK_SHOW_FLOW` | Display task execution flow diagram |
-| `AGENT_SPAWN` | Create a new agent — `AGENT_SPAWN <name> <prompt>` |
-| `AGENT_CALL` | Call an agent — `AGENT_CALL <agent> <command>` |
-| `AGENT_PASS` | Pass data to an agent — `AGENT_PASS <agent> <data>` |
-| `AGENT_TERMINATE` | Terminate an agent — `AGENT_TERMINATE <name>` |
-| `SKILL_CALL` | Invoke a skill — `SKILL_CALL <name> [ARGS <json>]` |
-| `FILE_READ` | Read a file — `FILE_READ <path>` |
-| `FILE_WRITE` | Write to a file — `FILE_WRITE <path> <content>` |
-| `FILE_EXECUTE` | Execute a file/script — `FILE_EXECUTE <path>` |
-| `FILE_PARSE` | Parse a file — `FILE_PARSE <path> [FORMAT <fmt>]` |
-| `CHANNEL_SEND` | Send to a channel — `CHANNEL_SEND <channel> <message>` |
-| `EMAIL_SEND` | Send email — `EMAIL_SEND <to> SUBJECT <subj> BODY <body>` |
-| `CRON_CREATE` | Create cron job — `CRON_CREATE <name> <schedule> <command>` |
-| `CRON_CALL` | Trigger a cron job manually — `CRON_CALL <name>` |
-| `PUBLISH_CANVAS` | Publish a canvas page — `PUBLISH_CANVAS <name> [VERSION <ver>]` |
-
-### Automation Example
-
-```clawscript
-TASK_DEFINE "DailyScan"
-  SET bull = BOLLINGER(20)
-  IF CLOSE > bull.upper THEN
-    CHANNEL_SEND "#trading-chat" "🚀 Bullish breakout on " + epic + "! RSI: " + rsi
-  ENDIF
-  EMAIL_SEND "trader@example.com" SUBJECT "Daily Update" BODY "Scan complete. Positions: " + POSITION_COUNT()
-ENDTASK
-
-TASK_DEFINE "RiskCheck"
-  IF DRAWDOWN(%) > 5% THEN
-    CLOSE ALL
-    CHANNEL_SEND "#alerts" "⚠️ High drawdown! All positions closed."
-  ENDIF
-ENDTASK
-
-TASK_CHAIN "DailyScan" "RiskCheck"
-TASK_ASSIGN "DailyScan" "main"
-CRON_CREATE "NightlyBackup" "0 0 * * *" "FILE_WRITE ./backup.json HISTORICAL(epic)"
-```
+Real-time simulation output showing parsed statement count, data fetching with automatic fallback, and live indicator computation (EMA, RSI, MACD).
 
 ## Quick Start
 
+### Automation example
+
 ```clawscript
-// Simple RSI strategy
+// Daily workflow: scan data, notify team, archive results
+TASK_DEFINE "DataPipeline"
+  SET report = CLAW_WEB "https://api.example.com/metrics"
+  AI_QUERY "Summarize this data: " + report
+  CHANNEL_SEND "#team" "Daily report ready"
+  FILE_WRITE "./reports/daily.json" report
+ENDTASK
+
+CRON_CREATE "DailyPipeline" "0 9 * * *" "DataPipeline"
+```
+
+### Neural brain example
+
+```clawscript
+// Create and train a custom neural network
+BRAIN_CREATE "pattern-detector" SENSORY 400 INTER 2400 MOTOR 600
+BRAIN_USE "pattern-detector"
+BRAIN_BOOT
+
+// Stimulate with input data
+BRAIN_STIMULATE { "price_up": 0.8, "volume": 0.5 }
+
+// Read motor outputs
+BRAIN_OBSERVE
+
+// Reinforce good results
+BRAIN_FEEDBACK "sugar"
+
+// Save learned weights
+BRAIN_SAVE
+```
+
+### Agent orchestration example
+
+```clawscript
+// Spawn specialized agents and coordinate tasks
+SPAWN_AGENT "researcher" WITH "You are a research assistant"
+SPAWN_AGENT "analyst" WITH "You are a data analyst"
+
+SET data = AI_QUERY "Gather recent market sentiment"
+AGENT_PASS data TO "analyst"
+
+TASK_DEFINE "AnalysisChain"
+  SET result = AGENT_CALL "analyst" "Analyze the data I received"
+  CHANNEL_SEND "#results" result
+ENDTASK
+
+TASK_CHAIN "AnalysisChain"
+```
+
+### Trading strategy example
+
+```clawscript
+// RSI strategy with risk management
 DEF rsi = RSI(14)
 
 IF rsi < 30 THEN
@@ -157,9 +160,8 @@ const ast = parseToAST(`
   ENDIF
 `);
 
-// Compile to JavaScript strategy class
-const { js } = parseAndGenerate(code, 'MyRSI');
-// js contains a complete Node.js module exporting a BaseStrategy subclass
+// Compile to JavaScript module
+const { js } = parseAndGenerate(code, 'MyStrategy');
 ```
 
 ## Project Structure
@@ -168,6 +170,7 @@ const { js } = parseAndGenerate(code, 'MyRSI');
 clawscript/
   lib/
     clawscript-parser.cjs    # Lexer, parser, AST builder, JS code generator
+    clawscript-brain.cjs     # Brain/Neural runtime (brain engine HTTP client + custom brain spawning)
     indicators.cjs            # 25+ technical indicators (EMA, RSI, MACD, etc.)
     openclaw/                 # OpenClaw API wrapper stubs
       openclaw-ai.cjs         #   AI queries and ML
@@ -183,13 +186,8 @@ clawscript/
   strategies/
     base-strategy.cjs         # Base class all strategies extend
     index.cjs                 # Auto-discovery strategy loader
-  templates/                  # 4 ready-to-use sample strategies
-    rsi-simple.cs
-    ema-crossover.cs
-    multi-indicator.cs
-    sentiment-scan.cs
-  examples/
-    custom-btctest-strategy.cjs  # Example compiled strategy
+  templates/                  # Ready-to-use sample scripts
+  examples/                   # Example compiled output
   docs/
     CLAWSCRIPT.md             # Full language reference (agent-readable)
     clawscript-docs.html      # Interactive documentation page
@@ -201,15 +199,21 @@ clawscript/
 
 ## Command Reference
 
-### Trading
+### Brain / Neural
 | Command | Description |
 |---------|-------------|
-| `BUY` | Open long — `BUY <size> AT MARKET\|LIMIT\|STOP [STOP <dist>] [LIMIT <dist>] [REASON <str>]` |
-| `SELL` | Open short / close long — same syntax as BUY |
-| `SELLSHORT` | Explicit short — `SELLSHORT <size> [STOP <dist>] [REASON <str>]` |
-| `EXIT` | Close position — `EXIT ALL\|PART [REASON <str>]` |
-| `CLOSE` | Close current — `CLOSE [REASON <str>]` |
-| `TRAILSTOP` | Trailing stop — `TRAILSTOP <dist> [ACCEL <val>] [MAX <val>]` |
+| `BRAIN_BOOT` | Boot the neural engine — `BRAIN_BOOT [SENSORY <n>] [INTER <n>] [MOTOR <n>]` |
+| `BRAIN_STATUS` | Get engine status (neurons, synapses, step count) |
+| `BRAIN_STIMULATE` | Send inputs — `BRAIN_STIMULATE <inputs_json>` |
+| `BRAIN_OBSERVE` | Read motor neuron output rates |
+| `BRAIN_FEEDBACK` | Reinforce — `BRAIN_FEEDBACK "sugar"\|"pain" [WITH <data>]` |
+| `BRAIN_TRAIN` | Toggle training — `BRAIN_TRAIN ON\|OFF [DIRECTION <dir>]` |
+| `BRAIN_SAVE` | Save brain weights to disk |
+| `BRAIN_LOAD` | Load brain weights from disk |
+| `BRAIN_CREATE` | Create custom brain — `BRAIN_CREATE <name> [SENSORY <n>] [INTER <n>] [MOTOR <n>]` |
+| `BRAIN_USE` | Switch brain — `BRAIN_USE <name>` or `BRAIN_USE "default"` |
+| `BRAIN_LIST` | List all saved brain profiles |
+| `BRAIN_DESTROY` | Remove brain — `BRAIN_DESTROY <name> [DELETE_WEIGHTS]` |
 
 ### Variables
 | Command | Description |
@@ -236,6 +240,7 @@ clawscript/
 | `AI_GENERATE_SCRIPT` | Auto-generate — `AI_GENERATE_SCRIPT <prompt> [TO <file>]` |
 | `ANALYZE_LOG` | Analyze logs — `ANALYZE_LOG <query> [LIMIT <n>]` |
 | `RUN_ML` | Run ML model — `RUN_ML <model> <data>` |
+| `IMAGINE` | Generate AI image — `IMAGINE <prompt> [MODEL <name>]` |
 
 ### Data Fetch
 | Command | Description |
@@ -252,12 +257,42 @@ clawscript/
 ### Agent Orchestration
 | Command | Description |
 |---------|-------------|
-| `SPAWN_AGENT` | Create agent — `SPAWN_AGENT <name> <prompt>` |
+| `SPAWN_AGENT` | Create agent — `SPAWN_AGENT <name> [WITH <prompt>]` |
 | `CALL_SESSION` | Call session — `CALL_SESSION <agent> <command>` |
 | `MUTATE_CONFIG` | Change config — `MUTATE_CONFIG <key> <value>` |
 | `ALERT` | Send alert — `ALERT <message> [LEVEL <lvl>]` |
 | `SAY_TO_SESSION` | Message session — `SAY_TO_SESSION <session> <message>` |
 | `WAIT_FOR_REPLY` | Wait for reply — `WAIT_FOR_REPLY <session> [TIMEOUT <ms>]` |
+
+### Task Planning & Automation
+| Command | Description |
+|---------|-------------|
+| `TASK_DEFINE` | Define a task — `TASK_DEFINE <name> ... ENDTASK` |
+| `TASK_ASSIGN` | Assign task to agent — `TASK_ASSIGN <task> <agent>` |
+| `TASK_CHAIN` | Sequential tasks — `TASK_CHAIN <task1> <task2> [...]` |
+| `TASK_PARALLEL` | Parallel tasks — `TASK_PARALLEL <task1> <task2> [...]` |
+| `CRON_CREATE` | Create cron job — `CRON_CREATE <name> <schedule> <command>` |
+| `CRON_CALL` | Trigger cron job — `CRON_CALL <name>` |
+| `FILE_READ` | Read file — `FILE_READ <path>` |
+| `FILE_WRITE` | Write file — `FILE_WRITE <path> <content>` |
+| `FILE_EXECUTE` | Execute script — `FILE_EXECUTE <path>` |
+
+### Communication
+| Command | Description |
+|---------|-------------|
+| `CHANNEL_SEND` | Send to channel — `CHANNEL_SEND <channel> <message>` |
+| `EMAIL_SEND` | Send email — `EMAIL_SEND <to> SUBJECT <subj> BODY <body>` |
+| `PUBLISH_CANVAS` | Publish canvas page — `PUBLISH_CANVAS <name>` |
+
+### Trading
+| Command | Description |
+|---------|-------------|
+| `BUY` | Open long — `BUY <size> AT MARKET\|LIMIT\|STOP [STOP <dist>] [LIMIT <dist>] [REASON <str>]` |
+| `SELL` | Open short / close long — same syntax as BUY |
+| `SELLSHORT` | Explicit short — `SELLSHORT <size> [STOP <dist>] [REASON <str>]` |
+| `EXIT` | Close position — `EXIT ALL\|PART [REASON <str>]` |
+| `CLOSE` | Close current — `CLOSE [REASON <str>]` |
+| `TRAILSTOP` | Trailing stop — `TRAILSTOP <dist> [ACCEL <val>] [MAX <val>]` |
 
 ### Advanced
 | Command | Description |
@@ -355,7 +390,7 @@ DEF vol = VOLUME()
 
 The editor includes a drag-and-drop node editor that syncs bidirectionally with the code pane:
 
-- **Toolbox sidebar** with 100+ command blocks organized in 20+ categories (including 5 Indicator sub-categories and Notifications)
+- **Toolbox sidebar** with 120+ command blocks organized in 20+ categories (including Brain/Neural, 5 Indicator sub-categories, and Notifications)
 - **Drag nodes** onto the canvas — they snap to a grid
 - **Connect ports** between nodes to define execution flow
 - **Inline editing** of node parameters
@@ -365,34 +400,34 @@ The editor includes a drag-and-drop node editor that syncs bidirectionally with 
 - **Export PNG** of the flow diagram
 - Changes in code update the flow, changes in flow update the code
 
-## Strategy Save & Deploy Pipeline
+## Save & Deploy Pipeline
 
-ClawScript strategies integrate directly with the Claw Trader bot engine:
+ClawScript modules integrate directly with the OpenClaw engine:
 
-1. **Write** — Create your strategy in the code editor or flow builder
-2. **Compile & Save** — Opens a dialog with strategy name and filename fields
-3. **Deploy** — The compiled `.cjs` file is saved to `skills/bots/strategies/`
-4. **Discover** — The strategy loader auto-registers the new strategy
-5. **Configure** — `INPUT_*` variables appear as editable fields in the bot dashboard
-6. **Run** — The engine calls `evaluateEntry()` / `evaluateExit()` on each market tick
+1. **Write** — Create your script in the code editor or flow builder
+2. **Compile & Save** — Opens a dialog with name and filename fields
+3. **Deploy** — The compiled `.cjs` file is saved for engine discovery
+4. **Discover** — The loader auto-registers the new module
+5. **Configure** — `INPUT_*` variables appear as editable fields in the dashboard
+6. **Run** — The engine calls `evaluateEntry()` / `evaluateExit()` on each tick
 
 ### Variable Tooltips
 
-Comments on `DEF` and `INPUT_*` lines become tooltips in the bot strategy editor:
+Comments on `DEF` and `INPUT_*` lines become tooltips in the editor:
 
 ```clawscript
-DEF rsi_period = 14       // RSI lookback period (tooltip in bot editor)
-INPUT_INT lookback DEFAULT 50   // Number of candles to analyze
-INPUT_FLOAT risk DEFAULT 0.02  // Risk per trade as decimal
+DEF period = 14           // Lookback period (tooltip in editor)
+INPUT_INT lookback DEFAULT 50   // Number of data points to analyze
+INPUT_FLOAT threshold DEFAULT 0.02  // Sensitivity threshold
 ```
 
 ### API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/clawscript/strategies` | GET | List ClawScript strategies |
-| `/api/clawscript/strategies` | POST | Save compiled strategy |
-| `/api/clawscript/strategies/:name` | DELETE | Remove strategy |
+| `/api/clawscript/strategies` | GET | List ClawScript modules |
+| `/api/clawscript/strategies` | POST | Save compiled module |
+| `/api/clawscript/strategies/:name` | DELETE | Remove module |
 | `/api/clawscript/templates` | GET | List templates |
 | `/api/clawscript/templates/:name` | GET | Get template source |
 | `/api/clawscript/backtest` | POST | Run backtest with historical data |
@@ -402,9 +437,9 @@ INPUT_FLOAT risk DEFAULT 0.02  // Risk per trade as decimal
 ClawScript compiles to a JavaScript class extending `BaseStrategy`:
 
 ```javascript
-class MyStrategy extends BaseStrategy {
+class MyModule extends BaseStrategy {
   async evaluateEntry(ticks, context) {
-    // Your strategy logic here
+    // Your logic here
     return { signal: true, direction: 'BUY', size: 1, ... };
   }
 
@@ -413,7 +448,7 @@ class MyStrategy extends BaseStrategy {
   }
 
   getConfigSchema() { /* UI config fields */ }
-  static get STRATEGY_TYPE() { return 'custom-mystrategy'; }
+  static get STRATEGY_TYPE() { return 'custom-mymodule'; }
 }
 ```
 
@@ -424,16 +459,16 @@ Place compiled `.cjs` files in `strategies/` — the auto-discovery loader picks
 The editor includes a built-in AI assistant (right panel, next to Output/Logs):
 
 - Automatically reads your current code, parse errors, and recent output logs
-- Ask it to fix errors, explain syntax, optimize strategies, or suggest improvements
+- Ask it to fix errors, explain syntax, optimize scripts, or suggest improvements
 - Model selector: CEO Agent (default, routes to OpenClaw gateway) or Grok
 - Full chat history with send on Enter
 
 ## Simulation & Backtest
 
 - **Green play button** runs simulation with real or mock data
-- **Instrument selector**: Set any IG epic manually (e.g. `CS.D.CFAGOLD.CFA.IP` for weekend markets)
-- **Multi-tier data fallback**: IG REST API → DB-cached candles → in-memory stream ticks → mock data
-- **Server-side backtest**: Full indicator computation with up to 2000 historical candles
+- **Instrument selector**: Set any instrument epic manually
+- **Multi-tier data fallback**: REST API, DB-cached candles, in-memory stream ticks, mock data
+- **Server-side backtest**: Full indicator computation with up to 2000 historical data points
 - **Results**: P&L, win rate, max drawdown, individual trade list with timestamps
 
 ## Testing
@@ -444,9 +479,9 @@ npm test
 node test/test-clawscript-parser.cjs
 ```
 
-221 tests total (82 parser + 139 pipeline) covering all commands, expressions, operators, edge cases, code generation, module integration, stub fallbacks, and real BTC data integration.
+221 tests total (82 parser + 139 pipeline) covering all commands, expressions, operators, edge cases, code generation, module integration, stub fallbacks, and data integration.
 
-## Sample Strategies
+## Sample Templates
 
 Seven complete templates are included in `templates/`:
 
@@ -456,7 +491,7 @@ Seven complete templates are included in `templates/`:
 4. **sentiment-scan.cs** — AI sentiment analysis + market scanner
 5. **btc-scalper.cs** — Fast BTC scalping with RSI + EMA and tight stops
 6. **mean-reversion.cs** — Bollinger Band mean reversion with error handling
-7. **bourse-trackers.cs** — Multi-indicator approach for major index CFDs (US 500, FTSE, DAX)
+7. **bourse-trackers.cs** — Multi-indicator approach for major index CFDs
 
 ## License
 

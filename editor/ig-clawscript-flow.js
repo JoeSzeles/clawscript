@@ -47,6 +47,22 @@ var NODE_CATS = [
       { cmd: 'RUN_ML', doc: 'Run ML model on data', params: [{k:'model',l:'Model',d:''},{k:'data',l:'Data',d:''}] }
     ]
   },
+  { id: 'brain_neural', label: 'Brain / Neural', color: '#00d4aa', bg: '#0a3d2e',
+    items: [
+      { cmd: 'BRAIN_BOOT', doc: 'Boot the neural engine (optional neuron config)', params: [{k:'sensory',l:'Sensory',d:''},{k:'inter',l:'Inter',d:''},{k:'motor',l:'Motor',d:''}] },
+      { cmd: 'BRAIN_STATUS', doc: 'Get brain engine status (neurons, synapses, step count)', params: [] },
+      { cmd: 'BRAIN_STIMULATE', doc: 'Send sensory inputs to the brain', params: [{k:'inputs',l:'Inputs (JSON)',d:''}] },
+      { cmd: 'BRAIN_OBSERVE', doc: 'Read motor neuron output rates', params: [] },
+      { cmd: 'BRAIN_FEEDBACK', doc: 'Send sugar/pain feedback to adjust synapses', params: [{k:'type',l:'Type (sugar/pain)',d:'sugar'}] },
+      { cmd: 'BRAIN_TRAIN', doc: 'Toggle training mode on/off', params: [{k:'state',l:'State',d:'ON'}] },
+      { cmd: 'BRAIN_SAVE', doc: 'Save brain weights to disk', params: [] },
+      { cmd: 'BRAIN_LOAD', doc: 'Load brain weights from disk', params: [] },
+      { cmd: 'BRAIN_CREATE', doc: 'Create a custom named brain instance', params: [{k:'name',l:'Name',d:''},{k:'sensory',l:'Sensory',d:'600'},{k:'inter',l:'Inter',d:'3600'},{k:'motor',l:'Motor',d:'800'}] },
+      { cmd: 'BRAIN_USE', doc: 'Switch active brain for subsequent commands', params: [{k:'name',l:'Name',d:''}] },
+      { cmd: 'BRAIN_LIST', doc: 'List all saved brain profiles', params: [] },
+      { cmd: 'BRAIN_DESTROY', doc: 'Destroy a named brain and optionally delete weights', params: [{k:'name',l:'Name',d:''}] }
+    ]
+  },
   { id: 'data', label: 'Data Fetch', color: '#79c0ff', bg: '#0c2d48',
     items: [
       { cmd: 'CLAW_WEB', doc: 'Fetch web page content', params: [{k:'url',l:'URL',d:''},{k:'instruct',l:'Instruct',d:''}] },
@@ -192,6 +208,13 @@ var NODE_CATS = [
       { cmd: 'MONTE_CARLO', doc: 'Monte Carlo simulation', params: [{k:'scenario',l:'Scenario',d:''},{k:'runs',l:'Runs',d:'10000'}] }
     ]
   },
+  { id: 'experiment', label: 'Experiments', color: '#00d4aa', bg: '#0a3d2e',
+    items: [
+      { cmd: 'EXPERIMENT_SETUP', doc: 'Setup a research experiment workspace', params: [{k:'name',l:'Name',d:''},{k:'metricCmd',l:'Metric Cmd',d:''},{k:'runCmd',l:'Run Cmd',d:''},{k:'inScope',l:'In Scope',d:''},{k:'budget',l:'Budget',d:''}] },
+      { cmd: 'EXPERIMENT_RUN', doc: 'Run a configured experiment', params: [{k:'name',l:'Name',d:''},{k:'tag',l:'Tag',d:''}] },
+      { cmd: 'EXPERIMENT_STATUS', doc: 'Check experiment status / results', params: [{k:'name',l:'Name',d:''},{k:'ledger',l:'Ledger',d:''}] }
+    ]
+  },
   { id: 'op-arithmetic', label: 'Arithmetic Operators', color: '#58a6ff', bg: '#0d2240',
     items: [
       { cmd: 'OP_ADD', doc: 'Add two values (+)', params: [], isOperator: true, opSymbol: '+', opInputs: 2 },
@@ -309,6 +332,21 @@ var NODE_CATS = [
     ]
   }
 ];
+
+var SUPER_SECTIONS = [
+  { id: 'sec-trading', label: 'Trading', icon: '\u25B2', cats: ['trading','tradingview','prt','portfolio','advanced'] },
+  { id: 'sec-indicators', label: 'Indicators', icon: '\u223F', cats: ['indicators_trend','indicators_oscillators','indicators_volatility','indicators_volume','indicators_other'] },
+  { id: 'sec-science', label: 'Scientific & Research', icon: '\u2318', cats: ['scientific','experiment','econpol','bloomberg'] },
+  { id: 'sec-ai', label: 'AI & Agents', icon: '\u2699', cats: ['ai','agent','agent_mgmt','task_planning'] },
+  { id: 'sec-data', label: 'Data & I/O', icon: '\u21C4', cats: ['data','file_data','communication','notifications','utility','skills_tools'] },
+  { id: 'sec-operators', label: 'Operators', icon: '\u00B1', cats: ['op-arithmetic','op-comparison','op-logical','op-crossover','op-string'] },
+  { id: 'sec-core', label: 'Core', icon: '\u25CF', cats: ['variables','control','functions','time_schedule'] }
+];
+
+var _catIdToSection = {};
+SUPER_SECTIONS.forEach(function(sec) {
+  sec.cats.forEach(function(cid) { _catIdToSection[cid] = sec.id; });
+});
 
 var CMD_LOOKUP = {};
 NODE_CATS.forEach(function(cat) {
@@ -432,15 +470,17 @@ FlowEngine.prototype.buildToolbox = function(parent) {
   scroll.className = 'cf-toolbox-scroll';
 
   var self = this;
-  NODE_CATS.forEach(function(cat) {
+
+  var catMap = {};
+  NODE_CATS.forEach(function(cat) { catMap[cat.id] = cat; });
+
+  function _buildCatGroup(cat) {
     var group = document.createElement('div');
     group.className = 'cf-toolbox-group';
-
     var groupHdr = document.createElement('div');
     groupHdr.className = 'cf-toolbox-group-header';
     groupHdr.style.borderLeftColor = cat.color;
-    var isOpCat2 = cat.id && cat.id.indexOf('op-') === 0;
-    groupHdr.innerHTML = '<span>' + cat.label + '</span><span class="cf-tg-arrow">' + (isOpCat2 ? '&#9662;' : '&#9656;') + '</span>';
+    groupHdr.innerHTML = '<span>' + cat.label + '</span><span class="cf-tg-arrow">&#9656;</span>';
     groupHdr.addEventListener('click', function() {
       var list = group.querySelector('.cf-toolbox-items');
       var arrow = groupHdr.querySelector('.cf-tg-arrow');
@@ -448,11 +488,9 @@ FlowEngine.prototype.buildToolbox = function(parent) {
       else { list.style.display = 'none'; arrow.innerHTML = '&#9656;'; }
     });
     group.appendChild(groupHdr);
-
     var items = document.createElement('div');
     items.className = 'cf-toolbox-items';
-    var isOpCat = cat.id && cat.id.indexOf('op-') === 0;
-    items.style.display = isOpCat ? '' : 'none';
+    items.style.display = 'none';
     cat.items.forEach(function(item) {
       var el = document.createElement('div');
       el.className = 'cf-toolbox-item';
@@ -477,7 +515,41 @@ FlowEngine.prototype.buildToolbox = function(parent) {
       items.appendChild(el);
     });
     group.appendChild(items);
-    scroll.appendChild(group);
+    return group;
+  }
+
+  var _placedCats = {};
+  SUPER_SECTIONS.forEach(function(sec) {
+    var secWrap = document.createElement('div');
+    secWrap.className = 'cf-super-section';
+    secWrap.setAttribute('data-sec', sec.id);
+    var secHdr = document.createElement('div');
+    secHdr.className = 'cf-super-header';
+    secHdr.innerHTML = '<span class="cf-super-icon">' + sec.icon + '</span><span class="cf-super-label">' + sec.label + '</span><span class="cf-super-arrow">&#9656;</span>';
+    var secBody = document.createElement('div');
+    secBody.className = 'cf-super-body';
+    secBody.style.display = 'none';
+    secHdr.addEventListener('click', function() {
+      var arrow = secHdr.querySelector('.cf-super-arrow');
+      if (secBody.style.display === 'none') { secBody.style.display = ''; arrow.innerHTML = '&#9662;'; }
+      else { secBody.style.display = 'none'; arrow.innerHTML = '&#9656;'; }
+    });
+    secWrap.appendChild(secHdr);
+    sec.cats.forEach(function(cid) {
+      var cat = catMap[cid];
+      if (cat) {
+        secBody.appendChild(_buildCatGroup(cat));
+        _placedCats[cid] = true;
+      }
+    });
+    secWrap.appendChild(secBody);
+    scroll.appendChild(secWrap);
+  });
+
+  NODE_CATS.forEach(function(cat) {
+    if (!_placedCats[cat.id]) {
+      scroll.appendChild(_buildCatGroup(cat));
+    }
   });
 
   tb.appendChild(scroll);
@@ -2052,6 +2124,21 @@ FlowEngine.prototype.nodeToLine = function(node) {
     case 'OP_AND': case 'OP_OR': case 'OP_NOT':
     case 'OP_CROSSES_OVER': case 'OP_CROSSES_UNDER': case 'OP_CONTAINS':
       return '// [operator] ' + node.cmd;
+    case 'EXPERIMENT_SETUP':
+      var es = 'EXPERIMENT_SETUP "' + (p.name || '') + '"';
+      if (p.metricCmd) es += ' METRIC_CMD "' + p.metricCmd + '"';
+      if (p.runCmd) es += ' RUN_CMD "' + p.runCmd + '"';
+      if (p.inScope) es += ' IN_SCOPE "' + p.inScope + '"';
+      if (p.budget) es += ' BUDGET ' + p.budget;
+      return es;
+    case 'EXPERIMENT_RUN':
+      var er = 'EXPERIMENT_RUN "' + (p.name || '') + '"';
+      if (p.tag) er += ' TAG "' + p.tag + '"';
+      return er;
+    case 'EXPERIMENT_STATUS':
+      var est = 'EXPERIMENT_STATUS "' + (p.name || '') + '"';
+      if (p.ledger) est += ' LEDGER "' + p.ledger + '"';
+      return est;
     default: return '// ' + node.cmd;
   }
 };

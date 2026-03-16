@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Experiment Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0d1117; color: #c9d1d9; padding: 16px; }
+.container { max-width: 960px; margin: 0 auto; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.header-left { display: flex; align-items: baseline; gap: 12px; }
+h1 { color: #00d4aa; font-size: 20px; }
+.subtitle { color: #8b949e; font-size: 12px; margin-bottom: 16px; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; text-align: center; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.stat-label { font-size: 10px; color: #8b949e; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+.keep { color: #2dc653; }
+.discard { color: #e3b341; }
+.crash { color: #f85149; }
+.best { color: #00d4aa; }
+.neutral { color: #58a6ff; }
+.card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.card h2 { color: #8b949e; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+.chart-wrap { position: relative; height: 240px; }
+.chart-wrap canvas { width: 100% !important; height: 100% !important; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #21262d; }
+th { color: #8b949e; font-weight: 600; font-size: 10px; text-transform: uppercase; }
+tr:hover { background: rgba(0,212,170,0.04); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+.badge-keep { background: #1b4332; color: #2dc653; }
+.badge-discard { background: #3d2e00; color: #e3b341; }
+.badge-crash { background: #3d1a1a; color: #f85149; }
+.empty { color: #484f58; font-style: italic; padding: 30px; text-align: center; }
+.btn { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 5px 14px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600; }
+.btn:hover { border-color: #00d4aa; color: #00d4aa; }
+.btn-sm { padding: 3px 10px; font-size: 10px; }
+.config-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.config-bar input { background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 5px 10px; border-radius: 4px; font-size: 12px; flex: 1; min-width: 120px; }
+.config-bar input:focus { outline: none; border-color: #00d4aa; }
+.config-bar label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+.loading { text-align: center; padding: 40px; color: #8b949e; }
+.error-msg { background: #3d1a1a; border: 1px solid #f85149; color: #f85149; padding: 12px 16px; border-radius: 8px; font-size: 12px; margin-bottom: 16px; }
+.best-card { background: #0a3d2e; border: 1px solid #00d4aa; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+.best-card .best-title { font-size: 10px; color: #00d4aa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.best-card .best-metric { font-size: 28px; font-weight: 700; color: #00d4aa; }
+.best-card .best-desc { font-size: 12px; color: #8b949e; margin-top: 4px; }
+.auto-refresh { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #8b949e; }
+.auto-refresh input[type="checkbox"] { accent-color: #00d4aa; }
+.mono { font-family: "Fira Code", "SF Mono", monospace; font-size: 11px; }
+.metric-up { color: #2dc653; }
+.metric-down { color: #f85149; }
+.metric-flat { color: #8b949e; }
+.api-hint { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+.api-hint summary { font-size: 11px; color: #8b949e; cursor: pointer; font-weight: 600; }
+.api-hint pre { font: 11px/1.6 "Fira Code", monospace; color: #79c0ff; background: #0d1117; padding: 8px; border-radius: 4px; margin-top: 8px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-left">
+      <h1>Experiment Dashboard</h1>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="auto-refresh">
+        <input type="checkbox" id="autoRefresh">
+        <label for="autoRefresh">Auto-refresh (10s)</label>
+      </div>
+      <button class="btn" id="btnRefresh" onclick="loadLedger()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="config-bar">
+    <label>Project</label>
+    <input type="text" id="inputProject" placeholder="path/to/project">
+    <label>Ledger</label>
+    <input type="text" id="inputLedger" placeholder="(default: results.tsv)" style="max-width:200px;">
+    <button class="btn" onclick="loadLedger()">Load</button>
+  </div>
+
+  <div id="errorBox" style="display:none;"></div>
+
+  <div id="content" style="display:none;">
+    <div id="bestCard" class="best-card" style="display:none;">
+      <div class="best-title">Best Result</div>
+      <div class="best-metric" id="bestMetric">--</div>
+      <div class="best-desc" id="bestDesc">--</div>
+    </div>
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-value neutral" id="statTotal">0</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-value keep" id="statKept">0</div><div class="stat-label">Kept</div></div>
+      <div class="stat-card"><div class="stat-value discard" id="statDiscarded">0</div><div class="stat-label">Discarded</div></div>
+      <div class="stat-card"><div class="stat-value crash" id="statCrashed">0</div><div class="stat-label">Crashed</div></div>
+      <div class="stat-card"><div class="stat-value best" id="statWinRate">0%</div><div class="stat-label">Win Rate</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Metric Over Time</h2>
+      <div class="chart-wrap"><canvas id="metricChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Experiment Ledger</h2>
+      <div id="ledgerTable"></div>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty" style="display:none;">
+    <div style="font-size:32px;margin-bottom:8px;">&#x2318;</div>
+    <div style="font-size:14px;color:#8b949e;margin-bottom:12px;">No experiments found</div>
+    <div style="font-size:11px;color:#484f58;">Enter a project path above and click Load, or run <span class="mono">EXPERIMENT_SETUP</span> first.</div>
+  </div>
+
+  <div id="loadingState" class="loading" style="display:none;">Loading experiments...</div>
+
+  <details class="api-hint">
+    <summary>Agent API Reference</summary>
+    <pre>
+GET  /api/clawscript/experiment/ledger?project=&lt;dir&gt;&amp;ledger=&lt;file&gt;
+POST /api/clawscript/experiment
+     { action: "setup"|"run"|"status", project: "&lt;dir&gt;", ... }
+
+Canvas URL (for agents):
+  /__openclaw__/canvas/experiment-dashboard.html?project=&lt;dir&gt;
+
+ClawScript:
+  EXPERIMENT_SETUP "name" METRIC_CMD "..." RUN_CMD "..." IN_SCOPE "..." BUDGET 300
+  EXPERIMENT_RUN "name" TAG "baseline"
+  EXPERIMENT_STATUS "name"
+
+Standalone:
+  const { experimentSetup, experimentRun, experimentStatus, getLedger }
+    = require('./skills/bots/research-experiment.cjs');
+    </pre>
+  </details>
+</div>
+
+<script>
+var chart = null;
+var refreshTimer = null;
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function getParams() {
+  var params = new URLSearchParams(window.location.search);
+  return {
+    project: params.get('project') || params.get('dir') || '',
+    ledger: params.get('ledger') || ''
+  };
+}
+
+function init() {
+  var p = getParams();
+  if (p.project) document.getElementById('inputProject').value = p.project;
+  if (p.ledger) document.getElementById('inputLedger').value = p.ledger;
+
+  document.getElementById('autoRefresh').addEventListener('change', function() {
+    if (this.checked) {
+      refreshTimer = setInterval(loadLedger, 10000);
+    } else {
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
+  });
+
+  if (p.project) {
+    loadLedger();
+  } else {
+    document.getElementById('emptyState').style.display = 'block';
+  }
+}
+
+function loadLedger() {
+  var project = document.getElementById('inputProject').value.trim();
+  var ledger = document.getElementById('inputLedger').value.trim();
+  if (!project) {
+    showError('Enter a project path to load experiments.');
+    return;
+  }
+
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('content').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'block';
+
+  var url = '/api/clawscript/experiment/ledger?project=' + encodeURIComponent(project);
+  if (ledger) url += '&ledger=' + encodeURIComponent(ledger);
+
+  var historyUrl = '?project=' + encodeURIComponent(project);
+  if (ledger) historyUrl += '&ledger=' + encodeURIComponent(ledger);
+  history.replaceState(null, '', historyUrl);
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('loadingState').style.display = 'none';
+      if (!data.ok) {
+        showError(data.error || 'Failed to load ledger');
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+      }
+      renderDashboard(data);
+    })
+    .catch(function(err) {
+      document.getElementById('loadingState').style.display = 'none';
+      showError('Network error: ' + err.message);
+    });
+}
+
+function showError(msg) {
+  var box = document.getElementById('errorBox');
+  box.className = 'error-msg';
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function renderDashboard(data) {
+  document.getElementById('content').style.display = 'block';
+
+  document.getElementById('statTotal').textContent = data.total;
+  document.getElementById('statKept').textContent = data.kept;
+  document.getElementById('statDiscarded').textContent = data.discarded;
+  document.getElementById('statCrashed').textContent = data.crashed;
+  var winRate = data.total > 0 ? Math.round((data.kept / data.total) * 100) : 0;
+  document.getElementById('statWinRate').textContent = winRate + '%';
+
+  var bestCard = document.getElementById('bestCard');
+  if (data.best) {
+    bestCard.style.display = 'block';
+    document.getElementById('bestMetric').textContent = data.best.metric;
+    document.getElementById('bestDesc').textContent =
+      (data.best.description || 'No description') +
+      (data.best.commit ? ' (' + data.best.commit.substring(0, 7) + ')' : '');
+  } else {
+    bestCard.style.display = 'none';
+  }
+
+  renderChart(data.rows);
+  renderTable(data.rows);
+}
+
+function renderChart(rows) {
+  var ctx = document.getElementById('metricChart').getContext('2d');
+
+  var labels = [];
+  var values = [];
+  var colors = [];
+  var borderColors = [];
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    labels.push('#' + (i + 1) + (r.commit ? ' (' + r.commit.substring(0, 5) + ')' : ''));
+    var val = parseFloat(r.metric) || 0;
+    values.push(val);
+    if (r.status === 'keep') {
+      colors.push('rgba(45,198,83,0.3)');
+      borderColors.push('#2dc653');
+    } else if (r.status === 'discard') {
+      colors.push('rgba(227,179,65,0.3)');
+      borderColors.push('#e3b341');
+    } else {
+      colors.push('rgba(248,81,73,0.3)');
+      borderColors.push('#f85149');
+    }
+  }
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Metric',
+        data: values,
+        borderColor: '#00d4aa',
+        backgroundColor: 'rgba(0,212,170,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: borderColors,
+        pointBorderColor: borderColors,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel: function(ctx) {
+              var row = rows[ctx.dataIndex];
+              return row.status + (row.description ? ': ' + row.description : '');
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#484f58', font: { size: 9 }, maxRotation: 45 },
+          grid: { color: '#21262d' }
+        },
+        y: {
+          ticks: { color: '#484f58', font: { size: 10 } },
+          grid: { color: '#21262d' }
+        }
+      }
+    }
+  });
+}
+
+function renderTable(rows) {
+  var container = document.getElementById('ledgerTable');
+  if (!rows || rows.length === 0) {
+    container.innerHTML = '<div class="empty">No experiments recorded yet.</div>';
+    return;
+  }
+
+  var html = '<table><thead><tr><th>#</th><th>Commit</th><th>Metric</th><th>Delta</th><th>Status</th><th>Description</th></tr></thead><tbody>';
+
+  var prevKeptMetric = null;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var metric = parseFloat(r.metric) || 0;
+    var badgeClass = r.status === 'keep' ? 'badge-keep' : (r.status === 'discard' ? 'badge-discard' : 'badge-crash');
+
+    var delta = '';
+    if (prevKeptMetric !== null && r.status !== 'crash') {
+      var diff = metric - prevKeptMetric;
+      if (diff > 0) delta = '<span class="metric-up">+' + diff.toFixed(6) + '</span>';
+      else if (diff < 0) delta = '<span class="metric-down">' + diff.toFixed(6) + '</span>';
+      else delta = '<span class="metric-flat">=</span>';
+    }
+    if (r.status === 'keep') prevKeptMetric = metric;
+
+    html += '<tr>';
+    html += '<td style="color:#484f58;">' + (i + 1) + '</td>';
+    html += '<td class="mono">' + esc(r.commit ? r.commit.substring(0, 7) : '--') + '</td>';
+    html += '<td class="mono">' + (r.status === 'crash' ? '<span class="crash">CRASH</span>' : metric.toFixed(6)) + '</td>';
+    html += '<td>' + delta + '</td>';
+    html += '<td><span class="badge ' + badgeClass + '">' + esc(r.status) + '</span></td>';
+    html += '<td>' + esc(r.description) + '</td>';
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>

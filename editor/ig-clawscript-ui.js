@@ -252,6 +252,13 @@ function buildEditorUI() {
   '.cf-toolbox-group { margin-bottom:2px; }' +
   '.cf-toolbox-group-header { display:flex; justify-content:space-between; align-items:center; padding:4px 8px; font-size:10px; font-weight:600; color:#8b949e; cursor:pointer; border-left:3px solid transparent; }' +
   '.cf-toolbox-group-header:hover { background:#21262d; }' +
+  '.cf-super-section { margin-bottom:4px; }' +
+  '.cf-super-header { display:flex; align-items:center; gap:6px; padding:6px 8px; font-size:11px; font-weight:700; color:#c9d1d9; cursor:pointer; background:#161b22; border-bottom:1px solid #21262d; text-transform:uppercase; letter-spacing:0.5px; }' +
+  '.cf-super-header:hover { background:#1c2128; }' +
+  '.cf-super-icon { font-size:12px; width:16px; text-align:center; }' +
+  '.cf-super-label { flex:1; }' +
+  '.cf-super-arrow { font-size:9px; color:#484f58; }' +
+  '.cf-super-body { padding-left:4px; border-left:2px solid #30363d; margin-left:6px; }' +
   '.cf-tg-arrow { font-size:9px; }' +
   '.cf-toolbox-items { padding:2px 6px; }' +
   '.cf-toolbox-item { padding:3px 6px; margin:1px 0; border-radius:3px; font-size:10px; color:#c9d1d9; cursor:grab; border-left:3px solid transparent; background:#0d1117; user-select:none; }' +
@@ -537,6 +544,10 @@ function buildEditorUI() {
     '<button id="csBtnExportCS" title="Export ClawScript">Export .cs</button>' +
     '<button id="csBtnExportJSON" title="Export Flow JSON">Export JSON</button>' +
     '<button id="csBtnExportJS" title="Export Generated JS">Export .js</button>' +
+    '<div class="cs-sep"></div>' +
+    '<button id="csBtnDocsDocs" title="ClawScript Language Docs" style="background:#1a1a2e;border-color:#7c3aed;color:#a78bfa;font-size:11px;">&#128214; Docs</button>' +
+    '<button id="csBtnDocsRulebook" title="Trading Bot Rulebook" style="background:#1a1a2e;border-color:#7c3aed;color:#a78bfa;font-size:11px;">&#128218; Rulebook</button>' +
+    '<button id="csBtnDocsExamples" title="Example Strategies" style="background:#1a1a2e;border-color:#7c3aed;color:#a78bfa;font-size:11px;">&#128161; Examples</button>' +
   '</div>' +
 
   '<div class="cs-main" id="csMainPanel">' +
@@ -712,6 +723,9 @@ function attachEditorEvents() {
   document.getElementById('csBtnExportCS').addEventListener('click', exportCS);
   document.getElementById('csBtnExportJSON').addEventListener('click', exportJSON);
   document.getElementById('csBtnExportJS').addEventListener('click', exportGenJS);
+  document.getElementById('csBtnDocsDocs').addEventListener('click', function() { window.open('/__openclaw__/canvas/clawscript-docs.html', '_blank'); });
+  document.getElementById('csBtnDocsRulebook').addEventListener('click', function() { openRulebookPopup(); });
+  document.getElementById('csBtnDocsExamples').addEventListener('click', function() { openExamplesPopup(); });
   document.getElementById('csBtnModeCode').addEventListener('click', function() { setViewMode('code'); });
   document.getElementById('csBtnModeSplit').addEventListener('click', function() { setViewMode('split'); });
   document.getElementById('csBtnModeFlow').addEventListener('click', function() { setViewMode('flow'); });
@@ -1054,13 +1068,34 @@ function compileAndSave() {
     csLog('Parse successful: ' + result.ast.body.length + ' statements', 'success');
     csLog('Imports: ' + result.imports.join(', '), 'info');
     csLog('Variables: ' + result.variables.join(', '), 'info');
+    var hasValidationErrors = false;
+    if (result.validation) {
+      if (result.validation.errors && result.validation.errors.length > 0) {
+        hasValidationErrors = true;
+        for (var vi = 0; vi < result.validation.errors.length; vi++) {
+          csLog('VALIDATION ERROR: ' + result.validation.errors[vi], 'error');
+        }
+      }
+      if (result.validation.warnings && result.validation.warnings.length > 0) {
+        for (var wi = 0; wi < result.validation.warnings.length; wi++) {
+          csLog('VALIDATION WARNING: ' + result.validation.warnings[wi], 'warn');
+        }
+      }
+      if (result.validation.valid) {
+        csLog('Validation passed', 'success');
+      }
+    }
     csLog('--- Generated JavaScript ---', 'info');
     var jsLines = result.js.split('\n');
     for (var i = 0; i < jsLines.length; i++) {
       csLog(jsLines[i], 'trace');
     }
     renderFlow(result.ast);
-    showSaveDialog(code, result);
+    if (hasValidationErrors) {
+      csLog('Cannot save: fix validation errors above before saving.', 'error');
+    } else {
+      showSaveDialog(code, result);
+    }
   } catch(e) {
     csLog('Compile Error: ' + e.message, 'error');
   }
@@ -1233,6 +1268,10 @@ function fetchStreamCandles(instrument, resolution, max) {
   });
 }
 
+function _codeUsesTradingCommands(code) {
+  return /\b(BUY|SELL|SELLSHORT|EXIT|CLOSE|TRAILSTOP|STRATEGY_ENTRY|STRATEGY_EXIT|STRATEGY_CLOSE|PRT_BUY|PRT_SELL)\b/.test(code || '');
+}
+
 function getSelectedInstrument() {
   var el = document.getElementById('csInstrumentInput');
   return (el && el.value.trim()) || 'CS.D.BITCOIN.CFD.IP';
@@ -1311,31 +1350,40 @@ function _showBacktestConfigPopup() {
   if (!code) { csLog('No code to backtest.', 'warn'); return; }
   var savedCfg = {};
   try { savedCfg = JSON.parse(localStorage.getItem('cs_backtest_cfg') || '{}'); } catch(_) {}
+  var isTrading = _codeUsesTradingCommands(code);
   var overlay = document.createElement('div');
   overlay.className = 'cs-runner-overlay';
   overlay.id = 'csBacktestCfgOverlay';
+  var instrumentSection = isTrading ?
+    '<label style="font-size:11px;color:#8b949e;">Instrument (Epic)</label>' +
+    '<input id="csBtEpic" type="text" value="' + (savedCfg.epic || getSelectedInstrument()) + '" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' :
+    '<div style="font-size:10px;color:#58a6ff;padding:2px 0;background:#0d1117;border:1px solid #1f6feb33;border-radius:4px;padding:6px 10px;">General utility script — no instrument required</div>';
+  var tradingFieldsHtml = isTrading ?
+    '<label style="font-size:11px;color:#8b949e;">Timeframe / Resolution</label>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:4px;" id="csBtTfBtns">' +
+      [['SECOND','1s'],['SECOND_2','2s'],['SECOND_5','5s'],['SECOND_10','10s'],['SECOND_20','20s'],['SECOND_30','30s'],['SECOND_40','40s'],
+       ['MINUTE','1M'],['MINUTE_5','5M'],['MINUTE_15','15M'],['HOUR','1H'],['HOUR_4','4H'],['DAY','1D'],['WEEK','1W']]
+      .map(function(tf) {
+        var sel = (savedCfg.resolution || 'HOUR') === tf[0];
+        return '<button type="button" data-tf="' + tf[0] + '" class="cs-tf-btn" style="padding:4px 8px;font-size:11px;font-weight:600;border-radius:4px;cursor:pointer;border:1px solid ' + (sel ? '#58a6ff' : '#30363d') + ';background:' + (sel ? '#1f6feb' : '#21262d') + ';color:' + (sel ? '#fff' : '#8b949e') + ';">' + tf[1] + '</button>';
+      }).join('') +
+    '</div>' +
+    '<label style="font-size:11px;color:#8b949e;">Bars</label>' +
+    '<select id="csBtCount" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' +
+      [[100,'100'],[250,'250'],[500,'500'],[1000,'1K'],[2500,'2.5K'],[5000,'5K'],[10000,'10K'],[100000,'100K'],[200000,'200K'],[1000000,'1M']].map(function(o) {
+        return '<option value="' + o[0] + '"' + ((savedCfg.count || 1000) == o[0] ? ' selected' : '') + '>' + o[1] + ' bars</option>';
+      }).join('') +
+    '</select>' +
+    '<div id="csBtTfNote" style="font-size:10px;color:#6e7681;display:none;">Sub-minute timeframes use stream candle data (built from live ticks)</div>' : '';
   overlay.innerHTML =
     '<div class="cs-runner-popup" style="max-width:420px;">' +
       '<div class="cs-runner-popup__header">' +
-        '<div class="cs-runner-popup__title"><span>Backtest Configuration</span></div>' +
+        '<div class="cs-runner-popup__title"><span>' + (isTrading ? 'Backtest Configuration' : 'Run Script') + '</span></div>' +
         '<button style="padding:2px 8px;font-size:14px;background:#21262d;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;cursor:pointer;" id="csBtCfgClose">\u2715</button>' +
       '</div>' +
       '<div style="padding:14px;display:flex;flex-direction:column;gap:10px;">' +
-        '<label style="font-size:11px;color:#8b949e;">Instrument (Epic)</label>' +
-        '<input id="csBtEpic" type="text" value="' + (savedCfg.epic || getSelectedInstrument()) + '" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' +
-        '<label style="font-size:11px;color:#8b949e;">Timeframe / Resolution</label>' +
-        '<select id="csBtResolution" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' +
-          '<option value="MINUTE">1 Minute</option>' +
-          '<option value="MINUTE_5">5 Minutes</option>' +
-          '<option value="MINUTE_15">15 Minutes</option>' +
-          '<option value="MINUTE_30">30 Minutes</option>' +
-          '<option value="HOUR" selected>1 Hour</option>' +
-          '<option value="HOUR_4">4 Hours</option>' +
-          '<option value="DAY">Daily</option>' +
-          '<option value="WEEK">Weekly</option>' +
-        '</select>' +
-        '<label style="font-size:11px;color:#8b949e;">Candle Count (max 2000)</label>' +
-        '<input id="csBtCount" type="number" value="' + (savedCfg.count || 200) + '" min="10" max="2000" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' +
+        instrumentSection +
+        tradingFieldsHtml +
         '<div style="display:flex;gap:8px;margin-top:6px;">' +
           '<button id="csBtRunBtn" style="flex:1;padding:8px 16px;font-size:13px;font-weight:600;background:#2a1a00;border:2px solid #e8a317;color:#e8a317;border-radius:6px;cursor:pointer;">Run Backtest</button>' +
           '<button id="csBtCancelBtn" style="padding:8px 16px;font-size:13px;background:#21262d;border:1px solid #30363d;color:#c9d1d9;border-radius:6px;cursor:pointer;">Cancel</button>' +
@@ -1343,18 +1391,35 @@ function _showBacktestConfigPopup() {
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
-  if (savedCfg.resolution) {
-    var sel = document.getElementById('csBtResolution');
-    for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === savedCfg.resolution) { sel.selectedIndex = i; break; } }
+  var _selectedTf = savedCfg.resolution || 'HOUR';
+  var tfBtns = overlay.querySelectorAll('.cs-tf-btn');
+  function _updateTfNote() {
+    var note = document.getElementById('csBtTfNote');
+    if (note) note.style.display = _selectedTf.indexOf('SECOND') === 0 ? 'block' : 'none';
   }
+  _updateTfNote();
+  tfBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _selectedTf = this.getAttribute('data-tf');
+      tfBtns.forEach(function(b) {
+        var act = b.getAttribute('data-tf') === _selectedTf;
+        b.style.background = act ? '#1f6feb' : '#21262d';
+        b.style.borderColor = act ? '#58a6ff' : '#30363d';
+        b.style.color = act ? '#fff' : '#8b949e';
+      });
+      _updateTfNote();
+    });
+  });
   function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
   document.getElementById('csBtCfgClose').addEventListener('click', close);
   document.getElementById('csBtCancelBtn').addEventListener('click', close);
   document.getElementById('csBtRunBtn').addEventListener('click', function() {
-    var epic = document.getElementById('csBtEpic').value.trim();
-    var resolution = document.getElementById('csBtResolution').value;
-    var count = parseInt(document.getElementById('csBtCount').value) || 200;
+    var epicEl = document.getElementById('csBtEpic');
+    var epic = epicEl ? epicEl.value.trim() : '';
+    var resolution = _selectedTf;
+    var countEl = document.getElementById('csBtCount');
+    var count = countEl ? (parseInt(countEl.value) || 1000) : 100;
     localStorage.setItem('cs_backtest_cfg', JSON.stringify({ epic: epic, resolution: resolution, count: count }));
     close();
     _executeBacktest(code, epic, resolution, count);
@@ -1364,15 +1429,26 @@ function _showBacktestConfigPopup() {
 function _executeBacktest(code, epic, resolution, candleCount) {
   clearLog();
   csLog('=== BACKTEST START ===', 'info');
-  csLog('Instrument: ' + epic + ' | Resolution: ' + resolution + ' | Candles: ' + candleCount, 'info');
-  csLog('Sending strategy to backtest engine...', 'info');
+  var isTrading = _codeUsesTradingCommands(code);
+  if (isTrading) {
+    csLog('Instrument: ' + epic + ' | Resolution: ' + resolution + ' | Candles: ' + candleCount, 'info');
+  } else {
+    csLog('Running utility script (no instrument)...', 'info');
+  }
+  csLog('Sending script to engine...', 'info');
 
   var btn = document.getElementById('csBtnBacktest');
   if (btn) { btn.disabled = true; btn.textContent = 'Running...'; }
 
-  _openBacktestResultsPopup(epic, resolution);
+  if (isTrading) _openBacktestResultsPopup(epic, resolution);
 
-  var payload = JSON.stringify({ code: code, instrument: epic, resolution: resolution, candleCount: candleCount });
+  var payloadObj = { code: code };
+  if (isTrading) {
+    payloadObj.instrument = epic;
+    payloadObj.resolution = resolution;
+    payloadObj.candleCount = candleCount;
+  }
+  var payload = JSON.stringify(payloadObj);
   var token = _getAuthToken();
   var headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
@@ -1556,9 +1632,14 @@ function runLive() {
   if (!code) { csLog('No code to run.', 'error'); return; }
   var savedCfg = {};
   try { savedCfg = JSON.parse(localStorage.getItem('cs_runlive_cfg') || '{}'); } catch(_) {}
+  var isTrading = _codeUsesTradingCommands(code);
   var overlay = document.createElement('div');
   overlay.className = 'cs-runner-overlay';
   overlay.id = 'csRunLiveCfgOverlay';
+  var instrumentSection = isTrading ?
+    '<label style="font-size:11px;color:#8b949e;">Instrument (Epic)</label>' +
+    '<input id="csRlEpic" type="text" value="' + (savedCfg.epic || getSelectedInstrument()) + '" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' :
+    '<div style="font-size:10px;color:#58a6ff;padding:2px 0;background:#0d1117;border:1px solid #1f6feb33;border-radius:4px;padding:6px 10px;">General utility script — no instrument required</div>';
   overlay.innerHTML =
     '<div class="cs-runner-popup" style="max-width:420px;">' +
       '<div class="cs-runner-popup__header">' +
@@ -1568,8 +1649,7 @@ function runLive() {
       '<div style="padding:14px;display:flex;flex-direction:column;gap:10px;">' +
         '<label style="font-size:11px;color:#8b949e;">Script Name</label>' +
         '<input id="csRlName" type="text" value="' + (savedCfg.name || 'editor-' + Date.now().toString(36)) + '" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' +
-        '<label style="font-size:11px;color:#8b949e;">Instrument (Epic)</label>' +
-        '<input id="csRlEpic" type="text" value="' + (savedCfg.epic || getSelectedInstrument()) + '" style="padding:6px 10px;font-size:12px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;">' +
+        instrumentSection +
         '<div id="csRlStatus" style="font-size:10px;color:#8b949e;padding:4px 0;">Ready to deploy</div>' +
         '<div style="display:flex;gap:8px;margin-top:6px;">' +
           '<button id="csRlRunBtn" style="flex:1;padding:8px 16px;font-size:13px;font-weight:600;background:#0a2a0a;border:2px solid #2ea043;color:#2ea043;border-radius:6px;cursor:pointer;">Deploy & Run</button>' +
@@ -1584,7 +1664,8 @@ function runLive() {
   document.getElementById('csRlCancelBtn').addEventListener('click', close);
   document.getElementById('csRlRunBtn').addEventListener('click', function() {
     var name = document.getElementById('csRlName').value.trim() || 'editor-' + Date.now().toString(36);
-    var epic = document.getElementById('csRlEpic').value.trim();
+    var epicEl = document.getElementById('csRlEpic');
+    var epic = epicEl ? epicEl.value.trim() : '';
     localStorage.setItem('cs_runlive_cfg', JSON.stringify({ name: name, epic: epic }));
     close();
     _executeLiveRun(code, name, epic);
@@ -1594,8 +1675,11 @@ function runLive() {
 function _executeLiveRun(code, name, epic) {
   var btn = document.getElementById('csBtnRunLive');
   if (btn) { btn.disabled = true; btn.textContent = 'Starting...'; }
-  csLog('Starting live script: ' + name + '...', 'info');
-  var payload = JSON.stringify({ code: code, name: name, instrument: epic });
+  var isTrading = _codeUsesTradingCommands(code);
+  csLog('Starting ' + (isTrading ? 'trading' : 'utility') + ' script: ' + name + '...', 'info');
+  var payloadObj = { code: code, name: name };
+  if (isTrading && epic) payloadObj.instrument = epic;
+  var payload = JSON.stringify(payloadObj);
   var token = _getAuthToken();
   var headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
@@ -2884,6 +2968,85 @@ function postResultsToServer() {
   } catch(e) {}
 }
 
+function openRulebookPopup() {
+  var existing = document.getElementById('csRulebookOverlay');
+  if (existing) { existing.remove(); return; }
+  var overlay = document.createElement('div');
+  overlay.id = 'csRulebookOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;';
+  var popup = document.createElement('div');
+  popup.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:12px;width:700px;max-height:80vh;overflow-y:auto;padding:24px;color:#c9d1d9;font-family:monospace;';
+  popup.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="margin:0;color:#a78bfa;">Trading Bot Rulebook</h2>' +
+      '<button onclick="this.closest(\'#csRulebookOverlay\').remove()" style="background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;">&#10005;</button>' +
+    '</div>' +
+    '<div style="font-size:13px;line-height:1.6;">' +
+      '<h3 style="color:#58a6ff;">Required Structure</h3>' +
+      '<ul><li>At least one <code style="color:#2dc653;">BUY</code> or <code style="color:#f47067;">SELL</code> with conditions</li>' +
+      '<li>Use at least one indicator (RSI, EMA, MACD, etc.)</li>' +
+      '<li>Define <code>stopDistance</code> and <code>limitDistance</code> &gt; 0</li>' +
+      '<li>Null-check all indicators before use</li></ul>' +
+      '<h3 style="color:#58a6ff;">Risk Management</h3>' +
+      '<ul><li>Every strategy MUST have a stop loss (stopDistance &gt; 0)</li>' +
+      '<li>Every strategy MUST have a take profit (limitDistance &gt; 0)</li>' +
+      '<li>Recommended risk:reward ratio &ge; 1:1.5</li></ul>' +
+      '<h3 style="color:#58a6ff;">Validation Checklist</h3>' +
+      '<ul><li>Has conditional BUY/SELL commands</li>' +
+      '<li>Uses technical indicators</li>' +
+      '<li>Null checks for all indicators</li>' +
+      '<li>stopDistance and limitDistance defined</li>' +
+      '<li>Compiles without errors</li>' +
+      '<li>Backtest shows &gt; 0 trades</li></ul>' +
+      '<h3 style="color:#58a6ff;">Common Mistakes</h3>' +
+      '<ul><li style="color:#f47067;">No BUY/SELL commands &rarr; strategy does nothing</li>' +
+      '<li style="color:#f47067;">Missing null checks &rarr; crashes on startup</li>' +
+      '<li style="color:#f47067;">No stop loss &rarr; unbounded risk</li>' +
+      '<li style="color:#f47067;">Unconditional BUY/SELL &rarr; trades every tick</li></ul>' +
+    '</div>';
+  overlay.appendChild(popup);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function openExamplesPopup() {
+  var existing = document.getElementById('csExamplesOverlay');
+  if (existing) { existing.remove(); return; }
+  var overlay = document.createElement('div');
+  overlay.id = 'csExamplesOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;';
+  var popup = document.createElement('div');
+  popup.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:12px;width:750px;max-height:80vh;overflow-y:auto;padding:24px;color:#c9d1d9;font-family:monospace;';
+  var examples = [
+    { name: 'RSI Mean Reversion', code: '// RSI Mean Reversion Strategy\nINPUT_INT rsiPeriod = 14 "RSI Period"\nINPUT_INT rsiOversold = 30 "RSI Oversold"\nINPUT_INT rsiOverbought = 70 "RSI Overbought"\nINPUT_INT stopDistance = 20 "Stop Distance"\nINPUT_INT limitDistance = 40 "Limit Distance"\nINPUT_INT size = 1 "Position Size"\n\nDEF rsi = RSI(prices, rsiPeriod)\n\nIF rsi != null\n  IF rsi < rsiOversold\n    BUY MARKET SIZE size\n  ENDIF\n  IF rsi > rsiOverbought\n    SELL MARKET SIZE size\n  ENDIF\nENDIF' },
+    { name: 'EMA Crossover + MACD', code: '// EMA Crossover with MACD Confirmation\nINPUT_INT emaFast = 9 "EMA Fast"\nINPUT_INT emaSlow = 21 "EMA Slow"\nINPUT_INT stopDistance = 30 "Stop Distance"\nINPUT_INT limitDistance = 60 "Limit Distance"\n\nDEF ema_fast = EMA(prices, emaFast)\nDEF ema_slow = EMA(prices, emaSlow)\nDEF macd = MACD(prices, 12, 26, 9)\n\nIF ema_fast != null AND ema_slow != null\n  IF ema_fast > ema_slow AND macd > 0\n    BUY MARKET SIZE 1\n  ENDIF\n  IF ema_fast < ema_slow AND macd < 0\n    SELL MARKET SIZE 1\n  ENDIF\nENDIF' },
+    { name: 'Bollinger Band Bounce', code: '// Bollinger Band Bounce Strategy\nINPUT_INT bbPeriod = 20 "BB Period"\nINPUT_FLOAT bbStdDev = 2.0 "BB Std Dev"\nINPUT_INT rsiPeriod = 14 "RSI Period"\nINPUT_INT stopDistance = 25 "Stop Distance"\nINPUT_INT limitDistance = 50 "Limit Distance"\n\nDEF bb = BOLLINGER(prices, bbPeriod, bbStdDev)\nDEF rsi = RSI(prices, rsiPeriod)\nDEF price = prices[prices.length - 1]\n\nIF bb != null AND rsi != null\n  IF price < bb.lower AND rsi < 30\n    BUY MARKET SIZE 1\n  ENDIF\n  IF price > bb.upper AND rsi > 70\n    SELL MARKET SIZE 1\n  ENDIF\nENDIF' }
+  ];
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+    '<h2 style="margin:0;color:#a78bfa;">Example Strategies</h2>' +
+    '<button onclick="this.closest(\'#csExamplesOverlay\').remove()" style="background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;">&#10005;</button></div>';
+  for (var i = 0; i < examples.length; i++) {
+    html += '<div style="margin-bottom:16px;border:1px solid #30363d;border-radius:8px;padding:12px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<strong style="color:#58a6ff;">' + examples[i].name + '</strong>' +
+        '<button data-idx="' + i + '" class="cs-example-use" style="padding:4px 12px;background:#1f6feb;border:1px solid #58a6ff;color:#fff;border-radius:4px;font-size:11px;cursor:pointer;">Use This</button>' +
+      '</div>' +
+      '<pre style="background:#161b22;padding:10px;border-radius:6px;font-size:11px;overflow-x:auto;white-space:pre-wrap;color:#c9d1d9;margin:0;">' + examples[i].code.replace(/</g, '&lt;') + '</pre></div>';
+  }
+  popup.innerHTML = html;
+  popup.querySelectorAll('.cs-example-use').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var idx = parseInt(this.getAttribute('data-idx'));
+      var editor = document.getElementById('csCodeEditor');
+      if (editor && examples[idx]) { editor.value = examples[idx].code; editor.dispatchEvent(new Event('input')); }
+      overlay.remove();
+    });
+  });
+  overlay.appendChild(popup);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 function openResultsPopup() {
   var existing = document.getElementById('csResultsOverlay');
   if (existing) existing.remove();
@@ -3693,7 +3856,24 @@ function parseClawScript(code) {
     throw parseErr;
   }
   var metadata = extractClawScriptMetadata(code);
-  return { ast: ast, js: generateJSFromAST(ast), imports: Object.keys(imports), variables: Object.keys(variables), metadata: metadata, warnings: _parseWarnings };
+  var js = generateJSFromAST(ast);
+  var validation = validateStrategyJSClient(js);
+  return { ast: ast, js: js, imports: Object.keys(imports), variables: Object.keys(variables), metadata: metadata, warnings: _parseWarnings, validation: validation };
+}
+
+function validateStrategyJSClient(js) {
+  var warnings = [];
+  var errors = [];
+  if (js.indexOf('static get STRATEGY_TYPE()') === -1) errors.push('Missing static STRATEGY_TYPE getter');
+  if (js.indexOf('evaluateEntry(') === -1) errors.push('Missing evaluateEntry method — strategy cannot generate trade signals');
+  if (js.indexOf('evaluateExit(') === -1) warnings.push('Missing evaluateExit method');
+  if (js.indexOf('getRequiredBufferSize()') === -1) warnings.push('Missing getRequiredBufferSize');
+  if (js.indexOf('getConfigSchema()') === -1) warnings.push('Missing getConfigSchema');
+  if (js.indexOf('extends BaseStrategy') === -1) errors.push('Strategy does not extend BaseStrategy');
+  if (js.indexOf('signal: true') === -1) errors.push('Strategy never returns { signal: true } — will never generate trades');
+  if (js.indexOf('stopDist') === -1 && js.indexOf('stopDistance') === -1) warnings.push('No stopDist/stopDistance — trades may lack stop loss');
+  if (js.indexOf('limitDist') === -1 && js.indexOf('limitDistance') === -1) warnings.push('No limitDist/limitDistance — trades may lack take profit');
+  return { valid: errors.length === 0, errors: errors, warnings: warnings };
 }
 
 function generateJSFromAST(ast) {
