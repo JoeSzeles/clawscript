@@ -215,6 +215,53 @@ clawscript/
 | `BRAIN_LIST` | List all saved brain profiles |
 | `BRAIN_DESTROY` | Remove brain — `BRAIN_DESTROY <name> [DELETE_WEIGHTS]` |
 
+
+## Neural / Brain Commands
+
+These commands integrate the BrainJar spiking neural network directly into ClawScript. They allow you to boot, stimulate, observe, reinforce, and manage neural "brains" for pattern recognition, trading signals, preference learning, or custom agent behavior.
+
+All commands are prefixed with `BRAIN_`. The engine supports multiple named brains (e.g. trading brain, preference brain).
+
+### Core Commands
+
+| Command                          | Description                                                                 | Example |
+|----------------------------------|-----------------------------------------------------------------------------|---------|
+| `BRAIN_BOOT`                     | Boot (or reboot) the default neural engine. Optional: set neuron counts.   | `BRAIN_BOOT SENSORY 600 INTER 3600 MOTOR 800` |
+| `BRAIN_STATUS`                   | Show current engine state: neurons, synapses, step count, active brain.    | `BRAIN_STATUS` |
+| `BRAIN_STIMULATE`                | Inject inputs (price ticks, feature vector, etc.) as JSON.                 | `BRAIN_STIMULATE {"price_delta": 0.8, "spread_accel": 1.2}` |
+| `BRAIN_OBSERVE`                  | Read current motor neuron output rates (buy/sell/hold or bias vector).     | `DEF rates = BRAIN_OBSERVE` |
+| `BRAIN_FEEDBACK`                 | Apply reinforcement: sugar (positive) or pain (negative). Optional data.   | `BRAIN_FEEDBACK "sugar" WITH {"pips": 45}` |
+| `BRAIN_TRAIN`                    | Toggle training mode on/off. Optional direction (buy/sell/preference).     | `BRAIN_TRAIN ON DIRECTION "buy"` |
+| `BRAIN_SAVE`                     | Save current brain weights and state to disk.                              | `BRAIN_SAVE` |
+| `BRAIN_LOAD`                     | Load a saved brain state from disk.                                        | `BRAIN_LOAD "trading-gold-2026-03"` |
+| `BRAIN_CREATE`                   | Create a new named brain profile with custom neuron counts.                | `BRAIN_CREATE "agent-brain" SENSORY 2400 INTER 7000 MOTOR 3000` |
+| `BRAIN_USE`                      | Switch to a different named brain.                                         | `BRAIN_USE "agent-brain"` or `BRAIN_USE "default"` |
+| `BRAIN_LIST`                     | List all saved brain profiles on disk.                                     | `BRAIN_LIST` |
+| `BRAIN_DESTROY`                  | Delete a named brain profile (optional: delete weights too).               | `BRAIN_DESTROY "test-brain" DELETE_WEIGHTS` |
+
+### Usage Examples
+
+```clawscript
+# Boot with custom size (optional)
+BRAIN_BOOT SENSORY 1200 INTER 8000 MOTOR 2000
+
+# Stimulate from current gold tick
+DEF ticks = GET_TICK "CS.D.CFAGOLD.CFA.IP"
+BRAIN_STIMULATE {"price_delta": ticks.delta, "spread": ticks.spread}
+
+# Observe motor rates
+DEF motor_rates = BRAIN_OBSERVE
+IF motor_rates.buy > motor_rates.sell + 0.2 THEN
+    BUY 1 STOP 40 LIMIT 120 "Neural signal"
+ENDIF
+
+# Reinforce after trade
+ON_TRADE_CLOSE:
+    DEF pips = POSITION_PNL_PIPS
+    BRAIN_FEEDBACK (pips > 0 ? "sugar" : "pain") WITH {"pips": pips}
+
+
+
 ### Variables
 | Command | Description |
 |---------|-------------|
